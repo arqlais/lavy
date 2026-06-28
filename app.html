@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LAVI Render</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* ─── RESET ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; background: #f7f5f1; color: #1c1c1c; font-family: 'Montserrat', -apple-system, sans-serif; overflow: hidden; }
+
+    /* ─── VARIÁVEIS LAVI ─────────────────────────────────────── */
+    :root {
+      --bg:        #f7f5f1;
+      --bg2:       #eeeae4;
+      --card:      #ffffff;
+      --border:    #e3dfd9;
+      --text:      #1c1c1c;
+      --text2:     #6b6660;
+      --text3:     #9e9890;
+      --accent:    #1c1c1c;
+      --accent-fg: #ffffff;
+      --rose:      #c9847a;
+      --petrol:    #3b6475;
+      --sand:      #c4ab8a;
+      --radius:    12px;
+      --radius-sm: 8px;
+      --shadow:    0 2px 12px rgba(0,0,0,.07);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
+    }
+
+    /* ─── LAYOUT PRINCIPAL ───────────────────────────────────── */
+    #app {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+    }
+
+    /* ─── SIDEBAR ────────────────────────────────────────────── */
+    #sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+      z-index: 10;
+    }
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-logo span {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+    .sidebar-logo sub {
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--rose);
+      text-transform: uppercase;
+      vertical-align: bottom;
+      margin-left: 2px;
+    }
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 0;
+    }
+    .nav-section {
+      padding: 6px 14px 2px;
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      cursor: pointer;
+      border-left: 3px solid transparent;
+      transition: all .15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--bg); color: var(--text); }
+    .nav-item.active { background: var(--bg); color: var(--text); border-left-color: var(--text); }
+    .nav-item .nav-icon { width: 16px; height: 16px; opacity: .7; flex-shrink: 0; }
+    .nav-item.active .nav-icon { opacity: 1; }
+    .sidebar-footer {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .sidebar-version { font-size: 9px; color: var(--text3); font-weight: 600; letter-spacing: .04em; }
+
+    /* ─── ÁREA PRINCIPAL ──────────────────────────────────────── */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .topbar {
+      height: 54px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .topbar-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .01em;
+      flex: 1;
+    }
+    .topbar-skp {
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+      background: var(--bg2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .topbar-btn {
+      height: 32px;
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      border: 1.3px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .topbar-btn:hover { border-color: var(--text); }
+    .topbar-btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
+    .topbar-btn.primary:hover { background: #333; }
+
+    /* ─── CONTEÚDO (abas) ─────────────────────────────────────── */
+    .page { display: none; flex: 1; overflow: hidden; }
+    .page.active { display: flex; flex-direction: column; }
+
+    /* ─── PÁGINA: RENDER ──────────────────────────────────────── */
+    #page-render {
+      flex-direction: row;
+    }
+    .render-canvas-area {
+      flex: 1;
+      background: var(--bg2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .render-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      color: var(--text3);
+    }
+    .render-placeholder svg { opacity: .35; }
+    .render-placeholder p { font-size: 12px; font-weight: 600; letter-spacing: .02em; }
+    #render-preview {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+    }
+    .render-panel {
+      width: 300px;
+      min-width: 300px;
+      background: var(--card);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 20px;
+      gap: 18px;
+    }
+    .rpanel-section { display: flex; flex-direction: column; gap: 8px; }
+    .rpanel-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--text3);
+    }
+    .rpanel-select, .rpanel-input, .rpanel-textarea {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--bg);
+      appearance: none;
+      transition: border .15s;
+    }
+    .rpanel-select:focus, .rpanel-input:focus, .rpanel-textarea:focus {
+      outline: none;
+      border-color: var(--text);
+    }
+    .rpanel-textarea { resize: vertical; min-height: 80px; }
+    .rpanel-row { display: flex; gap: 8px; }
+    .rpanel-row .rpanel-select { flex: 1; }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .toggle {
+      width: 36px; height: 20px;
+      background: var(--border);
+      border-radius: 10px;
+      position: relative;
+      cursor: pointer;
+      transition: background .2s;
+      flex-shrink: 0;
+    }
+    .toggle.on { background: var(--text); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform .2s;
+    }
+    .toggle.on::after { transform: translateX(16px); }
+    .render-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--text);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .render-btn:hover { background: #333; }
+    .render-btn:disabled { background: var(--text3); cursor: not-allowed; }
+    .render-btn.loading {
+      background: var(--text);
+      cursor: wait;
+      opacity: .7;
+    }
+    .capture-btn {
+      width: 100%;
+      padding: 11px;
+      background: transparent;
+      color: var(--text);
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .capture-btn:hover { border-color: var(--text); background: var(--bg); }
+
+    /* Miniatura da captura */
+    .capture-thumb-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--bg2);
+      border: 1.3px solid var(--border);
+    }
+    .capture-thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .capture-thumb-wrap .capture-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+    }
+
+    /* ─── PÁGINA: CENAS ───────────────────────────────────────── */
+    #page-cenas { flex-direction: column; }
+    .cenas-toolbar {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .cenas-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      align-content: start;
+    }
+    .cena-card {
+      background: var(--card);
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: box-shadow .15s;
+    }
+    .cena-card:hover { box-shadow: var(--shadow); }
+    .cena-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg2);
+      position: relative;
+      overflow: hidden;
+    }
+    .cena-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .cena-thumb-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text3);
+      font-weight: 600;
+    }
+    .cena-info { padding: 12px 14px; }
+    .cena-name {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cena-meta { font-size: 10px; color: var(--text3); font-weight: 600; }
+    .cena-actions {
+      padding: 0 14px 12px;
+      display: flex;
+      gap: 6px;
+    }
+    .cena-action {
+      flex: 1;
+      padding: 7px;
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      transition: all .15s;
+      text-align: center;
+    }
+    .cena-action:hover { border-color: var(--text); background: var(--bg); }
+    .cena-action.primary { background: var(--text); color: #fff; border-color: var(--text); }
+    .cena-action.primary:hover { background: #333; }
+    .cena-action.danger { color: #c0392b; }
+    .cena-action.danger:hover { border-color: #c0392b; background: #fff5f5; }
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: var(--text3);
+      padding: 40px;
+      text-align: center;
+    }
+    .empty-state svg { opacity: .3; }
+    .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--text); }
+    .empty-state p { font-size: 12px; line-height: 1.6; }
+
+    /* ─── PÁGINA: GALERIA (Histórico) ─────────────────────────── */
+    #page-galeria { flex-direction: column; }
+    .gallery-filters {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .gallery-grid {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+      align-content: start;
+    }
+    .gallery-card {
+      background: var(--card);
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .gallery-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+    .gallery-img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      display: block;
+      background: var(--bg2);
+    }
+    .gallery-info {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .gallery-name { font-size: 11px; font-weight: 600; }
+    .gallery-date { font-size: 9.5px; color: var(--text3); font-weight: 600; }
+    .gallery-actions {
+      padding: 0 12px 10px;
+      display: flex;
+      gap: 6px;
+    }
+    .gal-btn {
+      flex: 1;
+      padding: 6px;
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      font-family: inherit;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      transition: all .15s;
+    }
+    .gal-btn:hover { border-color: var(--text); background: var(--bg); }
+
+    /* ─── PÁGINA: 360° ────────────────────────────────────────── */
+    #page-360 { flex-direction: column; align-items: center; justify-content: center; }
+    .pano-area {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 40px;
+    }
+    .pano-preview {
+      width: 100%;
+      max-width: 600px;
+      aspect-ratio: 2/1;
+      background: var(--bg2);
+      border-radius: var(--radius);
+      border: 1.3px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+    .pano-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: none;
+    }
+    .pano-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text3);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .pano-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    /* ─── PÁGINA: CONFIGURAÇÕES ───────────────────────────────── */
+    #page-config { flex-direction: column; overflow-y: auto; }
+    .config-body {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      max-width: 600px;
+    }
+    .config-section {
+      background: var(--card);
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .config-section-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    .config-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .config-row-label { font-size: 12px; font-weight: 600; }
+    .config-row-sub { font-size: 10.5px; color: var(--text2); margin-top: 1px; }
+    .config-input {
+      flex: 1;
+      max-width: 240px;
+      padding: 9px 12px;
+      border: 1.3px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .config-input:focus { outline: none; border-color: var(--text); }
+    .config-save {
+      padding: 11px 22px;
+      background: var(--text);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      cursor: pointer;
+    }
+    .config-save:hover { background: #333; }
+    .key-status {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .key-status.ok { background: #e8f5e9; color: #2e7d32; }
+    .key-status.empty { background: var(--bg2); color: var(--text3); }
+
+    /* ─── TOAST ──────────────────────────────────────────────── */
+    #toast-container {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      padding: 10px 18px;
+      background: #1c1c1c;
+      color: #fff;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      animation: toast-in .2s ease;
+      pointer-events: auto;
+    }
+    .toast.error { background: #c0392b; }
+    .toast.success { background: #2e7d32; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ─── MODAL ──────────────────────────────────────────────── */
+    #modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px;
+      max-width: 460px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-title { font-size: 15px; font-weight: 800; }
+    .modal-body { font-size: 12px; color: var(--text2); line-height: 1.6; }
+    .modal-body b { color: var(--text); }
+    .modal-footer { display: flex; gap: 10px; margin-top: 4px; }
+    .modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1.3px solid var(--border);
+      background: transparent;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text);
+      transition: all .15s;
+    }
+    .modal-btn:hover { border-color: var(--text); }
+    .modal-btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
+    .modal-btn.primary:hover { background: #333; }
+
+    /* ─── LIGHTBOX ───────────────────────────────────────────── */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.88);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 6px;
+    }
+    #lightbox-close {
+      position: absolute;
+      top: 18px; right: 18px;
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,.15);
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ─── LOADING OVERLAY ────────────────────────────────────── */
+    #loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(247,245,241,.8);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    #loading-overlay.open { display: flex; }
+    .loading-spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-msg { font-size: 12px; font-weight: 700; color: var(--text2); }
+
+    /* ─── COMPACT MODE (livro fechado) ───────────────────────── */
+    @media (max-width: 600px) {
+      #sidebar { width: 54px; min-width: 54px; }
+      .sidebar-logo span { display: none; }
+      .sidebar-logo { padding: 16px; display: flex; justify-content: center; }
+      .nav-item span { display: none; }
+      .nav-item { padding: 12px; justify-content: center; border-left: none; border-bottom: 3px solid transparent; }
+      .nav-item.active { border-bottom-color: var(--text); }
+      .nav-section { display: none; }
+      .render-panel { width: 260px; min-width: 260px; }
+    }
+
+    /* ─── SCROLLBAR ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+    /* ─── CHIP / TAG ─────────────────────────────────────────── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 9.5px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      background: var(--bg2);
+      color: var(--text2);
+    }
+    .chip.active { background: #e8f5e9; color: #2e7d32; }
+
+    /* ─── FORMATO PILL ───────────────────────────────────────── */
+    .format-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+    .format-pill {
+      padding: 5px 11px;
+      border-radius: 20px;
+      border: 1.3px solid var(--border);
+      background: transparent;
+      font-family: inherit;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--text2);
+      transition: all .15s;
+    }
+    .format-pill:hover { border-color: var(--text); color: var(--text); }
+    .format-pill.selected { background: var(--text); color: #fff; border-color: var(--text); }
+
+    /* ─── SAFE FRAME INDICATOR ───────────────────────────────── */
+    .safeframe-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    /* ─── UPDATE BADGE ───────────────────────────────────────── */
+    #update-badge {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: #e3f2fd;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      color: #1565c0;
+      cursor: pointer;
+    }
+    #update-badge.visible { display: flex; }
+
+    /* ─── PROGRESSO RENDER ───────────────────────────────────── */
+    .render-progress {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .render-progress.visible { display: flex; }
+    .progress-bar-wrap {
+      height: 4px;
+      background: var(--bg2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 100%;
+      background: var(--text);
+      border-radius: 2px;
+      width: 0%;
+      transition: width .3s ease;
+    }
+    .progress-label { font-size: 10px; color: var(--text3); font-weight: 600; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <span>LAVI<sub>render</sub></span>
+    </div>
+    <div class="sidebar-nav">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" data-page="render">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+        <span>Render</span>
+      </div>
+      <div class="nav-item" data-page="cenas">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+        </svg>
+        <span>Cenas</span>
+      </div>
+      <div class="nav-item" data-page="galeria">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+        </svg>
+        <span>Galeria</span>
+      </div>
+      <div class="nav-item" data-page="360">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <ellipse cx="12" cy="12" rx="4" ry="10"/>
+          <path d="M2 12h20"/>
+        </svg>
+        <span>Tour 360°</span>
+      </div>
+      <div class="nav-section" style="margin-top:8px">Ferramentas</div>
+      <div class="nav-item" data-action="cleanup">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
+        </svg>
+        <span>Limpeza</span>
+      </div>
+      <div class="nav-item" data-page="config">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+        <span>Configurações</span>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-version">LAVI Render v4.0</div>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Render</div>
+      <div class="topbar-skp" id="topbar-skp" title="Arquivo SketchUp atual">Nenhum arquivo aberto</div>
+      <div id="update-badge" onclick="requestUpdate()">↑ Atualização disponível</div>
+      <button class="topbar-btn" onclick="requestCameraCheck()">↺ Atualizar viewport</button>
+    </div>
+
+    <!-- ── PÁGINA: RENDER ─────────────────────────────────── -->
+    <div class="page active" id="page-render">
+      <div class="render-canvas-area" id="canvas-area">
+        <div class="render-placeholder" id="render-placeholder">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="8" y="8" width="48" height="36" rx="4" stroke="#1c1c1c" stroke-width="2"/>
+            <circle cx="22" cy="22" r="5" stroke="#1c1c1c" stroke-width="2"/>
+            <path d="M8 35l14-12 10 10 8-8 14 12" stroke="#1c1c1c" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M24 56h16M32 44v12" stroke="#1c1c1c" stroke-width="2"/>
+          </svg>
+          <p>Capture a viewport para gerar um render</p>
+        </div>
+        <img id="render-preview" src="" alt="Render">
+      </div>
+
+      <div class="render-panel">
+        <!-- Captura -->
+        <div class="rpanel-section">
+          <div class="rpanel-label">Captura</div>
+          <div class="capture-thumb-wrap">
+            <img id="capture-thumb" src="" alt="">
+            <div class="capture-empty" id="capture-empty">Sem captura</div>
+          </div>
+          <button class="capture-btn" onclick="captureViewport()">📷 Capturar viewport</button>
+        </div>
+
+        <!-- Safe Frame -->
+        <div class="rpanel-section">
+          <div class="rpanel-label">Proporção</div>
+          <div class="format-pills" id="format-pills">
+            <button class="format-pill selected" data-fmt="16:9">16:9</button>
+            <button class="format-pill" data-fmt="9:16">9:16</button>
+            <button class="format-pill" data-fmt="4:3">4:3</button>
+            <button class="format-pill" data-fmt="4:5">4:5</button>
+            <button class="format-pill" data-fmt="1:1">1:1</button>
+            <button class="format-pill" data-fmt="viewport">Viewport</button>
+          </div>
+          <div class="toggle-row">
+            <span>Safe frame</span>
+            <div class="toggle" id="toggle-safeframe" onclick="toggleSafeFrame()"></div>
+          </div>
+          <div class="toggle-row">
+            <span>Estilo IA</span>
+            <div class="toggle" id="toggle-ai-style" onclick="toggleAiStyle()"></div>
+          </div>
+        </div>
+
+        <!-- Qualidade -->
+        <div class="rpanel-section">
+          <div class="rpanel-label">Qualidade</div>
+          <select class="rpanel-select" id="sel-qualidade">
+            <option value="2K">2K — Rápido</option>
+            <option value="4K" selected>4K — Recomendado</option>
+            <option value="8K">8K — Máximo</option>
+          </select>
+        </div>
+
+        <!-- Ambiente -->
+        <div class="rpanel-section">
+          <div class="rpanel-label">Ambiente</div>
+          <select class="rpanel-select" id="sel-ambiente">
+            <option value="dia">Dia</option>
+            <option value="noite">Noite</option>
+            <option value="entardecer">Entardecer</option>
+            <option value="manha">Manhã</option>
+            <option value="nublado">Nublado</option>
+          </select>
+        </div>
+
+        <!-- Estilo -->
+        <div class="rpanel-section">
+          <div class="rpanel-label">Estilo visual</div>
+          <select class="rpanel-select" id="sel-estilo">
+            <option value="fotorrealista">Fotorrealista</option>
+            <option value="minimalista">Minimalista</option>
+            <option value="warm">Warm &amp; Aconchegante</option>
+            <option value="moderno">Moderno &amp; Clean</option>
+            <option value="nordico">Nórdico</option>
+            <option value="biofilia">Biofilia</option>
+            <option value="industrial">Industrial</option>
+          </select>
+        </div>
+
+        <!-- Prompt extra -->
+        <div class="rpanel-section">
+          <div class="rpanel-label">Detalhes extras <span style="font-weight:500;color:var(--text3)">(opcional)</span></div>
+          <textarea class="rpanel-textarea" id="prompt-extra" placeholder="Ex: flores sobre a mesa, luz de tarde, almofadas terrosas..."></textarea>
+        </div>
+
+        <!-- Progresso -->
+        <div class="render-progress" id="render-progress">
+          <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+          <div class="progress-label" id="progress-label">Preparando...</div>
+        </div>
+
+        <!-- Botões de ação -->
+        <div class="rpanel-section" style="gap:8px">
+          <button class="render-btn" id="btn-render" onclick="startRender()">Gerar render</button>
+          <div style="display:flex;gap:8px">
+            <button class="capture-btn" id="btn-save" onclick="saveRender()" style="display:none">⬇ Salvar</button>
+            <button class="capture-btn" id="btn-upscale" onclick="upscaleRender()" style="display:none">✦ Upscale 4K</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PÁGINA: CENAS ──────────────────────────────────── -->
+    <div class="page" id="page-cenas">
+      <div class="cenas-toolbar">
+        <button class="topbar-btn primary" onclick="addScene()">+ Nova cena</button>
+        <button class="topbar-btn" onclick="importScenes()">Importar cenas do SketchUp</button>
+        <button class="topbar-btn" onclick="refreshAllThumbs()">↺ Atualizar miniaturas</button>
+        <div style="flex:1"></div>
+        <button class="topbar-btn" onclick="deleteAllScenes()" style="color:#c0392b">Limpar tudo</button>
+      </div>
+      <div id="cenas-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+        <div class="empty-state" id="cenas-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          </svg>
+          <h3>Nenhuma cena salva</h3>
+          <p>Salve cenas do seu projeto para organizar<br>diferentes ângulos e gerar renders individuais.</p>
+          <button class="topbar-btn primary" onclick="addScene()" style="margin-top:8px">+ Nova cena</button>
+        </div>
+        <div class="cenas-grid" id="cenas-grid" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- ── PÁGINA: GALERIA ────────────────────────────────── -->
+    <div class="page" id="page-galeria">
+      <div class="gallery-filters">
+        <select class="rpanel-select" id="gal-filter" style="width:auto;min-width:160px" onchange="filterGallery()">
+          <option value="all">Todos os renders</option>
+          <option value="foto">Fotorrealista</option>
+          <option value="video">Vídeos</option>
+          <option value="upscale">Upscale</option>
+        </select>
+        <div style="flex:1"></div>
+        <button class="topbar-btn" onclick="openProjectFolder()">📁 Abrir pasta</button>
+      </div>
+      <div id="galeria-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+        <div class="empty-state" id="galeria-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+          </svg>
+          <h3>Nenhum render ainda</h3>
+          <p>Seus renders aparecem aqui automaticamente<br>após serem gerados.</p>
+        </div>
+        <div class="gallery-grid" id="gallery-grid" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- ── PÁGINA: 360° ───────────────────────────────────── -->
+    <div class="page" id="page-360">
+      <div class="pano-area">
+        <div class="pano-preview">
+          <img id="pano-img" src="" alt="">
+          <div class="pano-empty" id="pano-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"/>
+              <ellipse cx="12" cy="12" rx="4" ry="10"/>
+              <path d="M2 12h20"/>
+            </svg>
+            <span>Capture um panorama 360°</span>
+          </div>
+        </div>
+        <div class="pano-controls">
+          <div class="rpanel-section">
+            <div class="rpanel-label">Resolução</div>
+            <select class="rpanel-select" id="sel-pano-res">
+              <option value="2K">2K</option>
+              <option value="4K" selected>4K</option>
+              <option value="8K">8K</option>
+            </select>
+          </div>
+          <div class="toggle-row">
+            <span>Aplicar estilo IA</span>
+            <div class="toggle" id="toggle-pano-ai" onclick="togglePanoAi()"></div>
+          </div>
+          <button class="render-btn" onclick="capturePanorama()">Capturar 360°</button>
+          <button class="capture-btn" id="btn-save-pano" onclick="savePanorama()" style="display:none">⬇ Salvar panorama</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PÁGINA: CONFIGURAÇÕES ──────────────────────────── -->
+    <div class="page" id="page-config">
+      <div class="config-body">
+        <h2 style="font-size:16px;font-weight:800">Configurações</h2>
+
+        <!-- Google AI Studio -->
+        <div class="config-section">
+          <div class="config-section-title">Google AI Studio</div>
+          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
+            Use sua própria chave da <a href="https://aistudio.google.com" target="_blank" style="color:var(--text);font-weight:700">Google AI Studio</a> para gerar renders.
+            Acesso gratuito com cota generosa. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--text);font-weight:700">Gerar chave →</a>
+          </p>
+          <div class="config-row">
+            <div>
+              <div class="config-row-label">Chave de API (Google)</div>
+              <div class="config-row-sub">Começa com "AIza..."</div>
+            </div>
+            <span class="key-status empty" id="google-key-status">Não configurada</span>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input type="password" class="config-input" id="input-google-key" placeholder="AIzaSy..." style="flex:1;max-width:100%">
+            <button class="config-save" onclick="saveGoogleKey()">Salvar</button>
+          </div>
+        </div>
+
+        <!-- Pasta de projeto -->
+        <div class="config-section">
+          <div class="config-section-title">Pasta do projeto</div>
+          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
+            Renders e capturas são salvos em uma pasta ao lado do arquivo .skp aberto.
+          </p>
+          <div class="config-row">
+            <div>
+              <div class="config-row-label">Pasta atual</div>
+              <div class="config-row-sub" id="folder-path-display" style="word-break:break-all;max-width:280px">Não configurada</div>
+            </div>
+            <button class="topbar-btn" onclick="pickFolder()">Escolher</button>
+          </div>
+        </div>
+
+        <!-- Preferências visuais -->
+        <div class="config-section">
+          <div class="config-section-title">Interface</div>
+          <div class="toggle-row">
+            <span>Modo compacto (1 coluna)</span>
+            <div class="toggle" id="toggle-compact" onclick="toggleCompact()"></div>
+          </div>
+          <div class="toggle-row">
+            <span>Safe frame no SketchUp</span>
+            <div class="toggle" id="toggle-sf-config"></div>
+          </div>
+        </div>
+
+        <!-- Sobre -->
+        <div class="config-section">
+          <div class="config-section-title">Sobre o LAVI Render</div>
+          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
+            Versão <b style="color:var(--text)">4.0.0</b> — Acesso vitalício, sem assinatura.
+            <br>Render via Google Gemini (BYOK — chave própria).
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAIS / OVERLAYS -->
+<div id="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<div id="lightbox">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
+<div id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-msg" id="loading-msg">Aguarde...</div>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// LAVI Render — app.html
+// Site externo que roda dentro do iframe do plugin SketchUp.
+// Comunicação via postMessage (plugin panel.html ↔ este app).
+// ═══════════════════════════════════════════════════════════════
+
+// ─── ESTADO ───────────────────────────────────────────────────
+const state = {
+  currentPage: 'render',
+  skpFilename: '',
+  captureDataUrl: null,
+  captureFormat: '16:9',
+  renderDataUrl: null,
+  panoDataUrl: null,
+  panoApplyAi: false,
+  safeFrameOn: false,
+  aiStyleOn: false,
+  compact: false,
+  googleKey: localStorage.getItem('lavi_google_key') || '',
+  projectFolder: null,
+  scenes: [],        // lista de cenas salvas (Pages do .skp)
+  galleryItems: [],  // histórico de renders
+  captures: [],      // capturas (aba Cenas)
+  isRendering: false,
+  updateAvailable: false,
+};
+
+// ─── PLUGIN BRIDGE ────────────────────────────────────────────
+// Detecta se rodando dentro do HtmlDialog do SketchUp (tem parent)
+// ou num browser normal (dev mode sem plugin).
+const IS_PLUGIN = window.parent !== window;
+
+function toPlugin(type, payload) {
+  if (IS_PLUGIN) {
+    window.parent.postMessage({ type, payload: payload || {} }, '*');
+  } else {
+    console.log('[LAVI→plugin]', type, payload);
+  }
+}
+
+// ─── RECEBE MENSAGENS DO PLUGIN (panel.html → postMessage) ────
+window.addEventListener('message', (e) => {
+  const msg = e.data;
+  if (!msg || typeof msg !== 'object') return;
+  switch (msg.type) {
+    case 'hemy.context.skp':
+      handleSkpContext(msg.payload);
+      break;
+    case 'hemy.pages.list.deliver':
+      handlePagesList(msg.payload);
+      break;
+    case 'hemy.pages.render.deliver':
+      handlePageRender(msg.payload);
+      break;
+    case 'hemy.viewport.captured':
+      handleViewportCaptured(msg.payload);
+      break;
+    case 'hemy.viewport.cameraSig.deliver':
+      // usado para detectar mudança de câmera
+      break;
+    case 'hemy.capture.list.deliver':
+      handleCapturesList(msg.payload);
+      break;
+    case 'hemy.capture.saved':
+      handleCaptureSaved(msg.payload);
+      break;
+    case 'hemy.capture.deleted':
+      toast('Captura removida.');
+      loadCaptures();
+      break;
+    case 'hemy.project.list.deliver':
+      handleGalleryList(msg.payload);
+      break;
+    case 'hemy.project.saveImage.deliver':
+      handleImageSaved(msg.payload);
+      break;
+    case 'hemy.model.cleanup.deliver':
+      handleCleanup(msg.payload);
+      break;
+    case 'hemy.error':
+      toast(msg.payload && msg.payload.message ? msg.payload.message : 'Erro desconhecido.', 'error');
+      hideLoading();
+      break;
+    case 'hemy.panorama.captured':
+      handlePanorama(msg.payload);
+      break;
+    case 'hemy.update.info':
+      handleUpdateInfo(msg.payload);
+      break;
+    case 'hemy.lightstrip.result':
+      if (msg.payload && msg.payload.ok === false) toast(msg.payload.error || 'Faixa de luz: erro.', 'error');
+      else toast('Faixa de luz criada!', 'success');
+      break;
+    case 'hemy.mirror.captured':
+      if (msg.payload && msg.payload.ok === false) toast(msg.payload.error || 'Reflexo: erro.', 'error');
+      else toast('Reflexo aplicado!', 'success');
+      break;
+    case 'hemy.auth.restore':
+      // sem uso — acesso vitalício
+      break;
+    default:
+      break;
+  }
+});
+
+// ─── BOOT ─────────────────────────────────────────────────────
+function boot() {
+  // Avisa o plugin que o app está pronto
+  toPlugin('hemy.ready');
+  // Pede contexto do .skp
+  toPlugin('hemy.context.refresh');
+  // Carrega preferências locais
+  updateGoogleKeyStatus();
+  // Checar update (não bloqueante)
+  toPlugin('hemy.update.check');
+  // Renderiza página inicial
+  navigateTo('render');
+}
+
+// ─── NAVEGAÇÃO ────────────────────────────────────────────────
+document.querySelectorAll('.nav-item[data-page]').forEach(el => {
+  el.addEventListener('click', () => navigateTo(el.dataset.page));
+});
+document.querySelectorAll('.nav-item[data-action]').forEach(el => {
+  el.addEventListener('click', () => {
+    if (el.dataset.action === 'cleanup') requestCleanup();
+  });
+});
+
+function navigateTo(page) {
+  state.currentPage = page;
+  document.querySelectorAll('.nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  document.querySelectorAll('.page').forEach(el => {
+    el.classList.toggle('active', el.id === 'page-' + page);
+  });
+  const titles = { render: 'Render', cenas: 'Cenas', galeria: 'Galeria', '360': 'Tour 360°', config: 'Configurações' };
+  document.getElementById('topbar-title').textContent = titles[page] || page;
+
+  if (page === 'cenas') loadPages();
+  if (page === 'galeria') { toPlugin('hemy.project.list'); }
+  if (page === 'config') updateGoogleKeyStatus();
+}
+
+// ─── CONTEXTO SKP ─────────────────────────────────────────────
+function handleSkpContext(payload) {
+  state.skpFilename = payload && payload.filename ? payload.filename : '';
+  const el = document.getElementById('topbar-skp');
+  el.textContent = state.skpFilename || 'Nenhum arquivo aberto';
+  el.title = state.skpFilename || '';
+}
+
+// ─── CAPTURA DE VIEWPORT ──────────────────────────────────────
+function captureViewport() {
+  const fmt = state.captureFormat;
+  showLoading('Capturando viewport...');
+  toPlugin('hemy.viewport.capture', {
+    format: fmt,
+    include_meta: true,
+    apply_ai_style: state.aiStyleOn,
+    matid_enabled: false,
+  });
+}
+
+function handleViewportCaptured(payload) {
+  hideLoading();
+  if (!payload || !payload.ok) {
+    toast(payload && payload.error ? payload.error : 'Falha na captura.', 'error');
+    return;
+  }
+  state.captureDataUrl = payload.dataUrl;
+  const thumb = document.getElementById('capture-thumb');
+  const empty = document.getElementById('capture-empty');
+  thumb.src = payload.dataUrl;
+  thumb.style.display = 'block';
+  empty.style.display = 'none';
+  toast('Viewport capturada!', 'success');
+}
+
+function requestCameraCheck() {
+  toPlugin('hemy.viewport.cameraSig');
+  captureViewport();
+}
+
+// ─── PROPORÇÃO / FORMAT PILLS ─────────────────────────────────
+document.getElementById('format-pills').addEventListener('click', (e) => {
+  const pill = e.target.closest('.format-pill');
+  if (!pill) return;
+  document.querySelectorAll('.format-pill').forEach(p => p.classList.remove('selected'));
+  pill.classList.add('selected');
+  state.captureFormat = pill.dataset.fmt;
+  updateOverlay();
+});
+
+// ─── SAFE FRAME / ESTILO IA ───────────────────────────────────
+function toggleSafeFrame() {
+  state.safeFrameOn = !state.safeFrameOn;
+  document.getElementById('toggle-safeframe').classList.toggle('on', state.safeFrameOn);
+  updateOverlay();
+}
+
+function toggleAiStyle() {
+  state.aiStyleOn = !state.aiStyleOn;
+  document.getElementById('toggle-ai-style').classList.toggle('on', state.aiStyleOn);
+  toPlugin('hemy.style.aiPreview', { active: state.aiStyleOn });
+}
+
+function updateOverlay() {
+  toPlugin('hemy.overlay.set', {
+    format: state.captureFormat,
+    safeframe: state.safeFrameOn,
+    grid: false,
+  });
+}
+
+// ─── RENDER ───────────────────────────────────────────────────
+function startRender() {
+  if (!state.captureDataUrl) { toast('Capture a viewport primeiro.', 'error'); return; }
+  if (state.isRendering) return;
+
+  const googleKey = document.getElementById('input-google-key').value.trim()
+                 || state.googleKey;
+  if (!googleKey || !googleKey.startsWith('AIza')) {
+    openModal('Chave não configurada',
+      'Vá em <b>Configurações</b> e insira sua chave da Google AI Studio para gerar renders.',
+      [{ label: 'Configurações', action: () => navigateTo('config'), primary: true },
+       { label: 'Cancelar', action: closeModal }]);
+    return;
+  }
+
+  state.isRendering = true;
+  const btn = document.getElementById('btn-render');
+  btn.textContent = 'Gerando...';
+  btn.disabled = true;
+  showProgress('Enviando para o Gemini...');
+
+  const params = {
+    qualidade: document.getElementById('sel-qualidade').value,
+    ambiente:  document.getElementById('sel-ambiente').value,
+    estilo:    document.getElementById('sel-estilo').value,
+    prompt:    document.getElementById('prompt-extra').value.trim(),
+    formato:   state.captureFormat,
+    google_key: googleKey,
+    viewport_dataurl: state.captureDataUrl,
+  };
+
+  // Envia para o plugin processar via Gemini
+  toPlugin('hemy.pages.use', params);
+
+  // Fallback: simula progresso enquanto espera
+  simulateProgress();
+}
+
+function simulateProgress() {
+  const steps = [
+    [800,  'Analisando cena...', 15],
+    [2000, 'Gerando render...', 40],
+    [5000, 'Processando detalhes...', 70],
+    [9000, 'Finalizando...', 90],
+  ];
+  steps.forEach(([delay, label, pct]) => {
+    setTimeout(() => {
+      if (state.isRendering) setProgress(pct, label);
+    }, delay);
+  });
+}
+
+function handlePageRender(payload) {
+  state.isRendering = false;
+  hideProgress();
+  const btn = document.getElementById('btn-render');
+  btn.textContent = 'Gerar render';
+  btn.disabled = false;
+
+  if (!payload || !payload.ok) {
+    toast(payload && payload.error ? payload.error : 'Erro ao gerar render.', 'error');
+    return;
+  }
+
+  state.renderDataUrl = payload.dataUrl || payload.render_dataurl;
+  if (!state.renderDataUrl) { toast('Render retornou vazio.', 'error'); return; }
+
+  const preview = document.getElementById('render-preview');
+  const placeholder = document.getElementById('render-placeholder');
+  preview.src = state.renderDataUrl;
+  preview.style.display = 'block';
+  placeholder.style.display = 'none';
+
+  document.getElementById('btn-save').style.display = 'block';
+  document.getElementById('btn-upscale').style.display = 'block';
+  toast('Render gerado!', 'success');
+
+  // Auto-salva na galeria
+  saveToGallery(state.renderDataUrl);
+}
+
+// ─── SALVAR RENDER ────────────────────────────────────────────
+function saveRender() {
+  if (!state.renderDataUrl) return;
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const filename = `lavi_render_${ts}.png`;
+  const b64 = state.renderDataUrl.replace(/^data:image\/\w+;base64,/, '');
+  toPlugin('hemy.file.save', { filename, base64: b64, mime: 'image/png' });
+  toast('Salvando render...', 'success');
+}
+
+function saveToGallery(dataUrl) {
+  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const filename = `render_${ts}.png`;
+  const b64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+  toPlugin('hemy.project.saveImage', {
+    filename,
+    base64: b64,
+    mime: 'image/png',
+    tipo: 'render',
+  });
+}
+
+function upscaleRender() {
+  if (!state.renderDataUrl) return;
+  toast('Upscale em desenvolvimento — em breve!');
+}
+
+function handleImageSaved(payload) {
+  if (payload && payload.ok) {
+    toast('Imagem salva na pasta do projeto!', 'success');
+  } else {
+    toast(payload && payload.error ? payload.error : 'Erro ao salvar imagem.', 'error');
+  }
+}
+
+// ─── GALERIA ──────────────────────────────────────────────────
+function handleGalleryList(payload) {
+  if (!payload || !payload.ok) return;
+  state.galleryItems = payload.items || [];
+  renderGallery();
+}
+
+function renderGallery() {
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('galeria-empty');
+  const items = state.galleryItems;
+  if (!items.length) {
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.style.display = 'grid';
+  grid.innerHTML = items.map((item, i) => `
+    <div class="gallery-card">
+      <img class="gallery-img" src="${item.dataUrl || item.thumb || ''}"
+           loading="lazy" onclick="openLightbox('${escJs(item.dataUrl || '')}')">
+      <div class="gallery-info">
+        <span class="gallery-name">${escHtml(item.filename || 'Render')}</span>
+        <span class="gallery-date">${item.date || ''}</span>
+      </div>
+      <div class="gallery-actions">
+        <button class="gal-btn" onclick="downloadGalleryItem(${i})">⬇ Salvar</button>
+        <button class="gal-btn" onclick="deleteGalleryItem(${i})" style="color:#c0392b">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterGallery() {
+  // Filtragem local por tipo
+  const f = document.getElementById('gal-filter').value;
+  const items = state.galleryItems.filter(it => f === 'all' || (it.tipo || '') === f);
+  const grid = document.getElementById('gallery-grid');
+  const empty = document.getElementById('galeria-empty');
+  if (!items.length) {
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.style.display = 'grid';
+  // (re-renderiza com items filtrados)
+}
+
+function downloadGalleryItem(i) {
+  const item = state.galleryItems[i];
+  if (!item) return;
+  const b64 = (item.dataUrl || '').replace(/^data:image\/\w+;base64,/, '');
+  toPlugin('hemy.file.save', { filename: item.filename || 'render.png', base64: b64, mime: 'image/png' });
+}
+
+function deleteGalleryItem(i) {
+  const item = state.galleryItems[i];
+  if (!item) return;
+  toPlugin('hemy.project.deleteImage', { filename: item.filename });
+}
+
+function openProjectFolder() {
+  toPlugin('hemy.project.openFolder');
+}
+
+// ─── CENAS (Pages do SketchUp) ────────────────────────────────
+function loadPages() {
+  toPlugin('hemy.pages.list');
+  loadCaptures();
+}
+
+function handlePagesList(pages) {
+  if (!Array.isArray(pages)) return;
+  state.scenes = pages;
+  renderScenes();
+}
+
+function renderScenes() {
+  const grid = document.getElementById('cenas-grid');
+  const empty = document.getElementById('cenas-empty');
+  const scenes = state.scenes;
+  if (!scenes.length) {
+    grid.style.display = 'none';
+    empty.style.display = 'flex';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.style.display = 'grid';
+  grid.innerHTML = scenes.map((s, i) => `
+    <div class="cena-card">
+      <div class="cena-thumb">
+        ${s.thumb ? `<img src="${escJs(s.thumb)}" alt="">` : `<div class="cena-thumb-empty">Sem miniatura</div>`}
+      </div>
+      <div class="cena-info">
+        <div class="cena-name">${escHtml(s.name || 'Cena')}</div>
+        <div class="cena-meta">${s.format || '16:9'} &nbsp;·&nbsp; ${s.width || '—'}px</div>
+      </div>
+      <div class="cena-actions">
+        <button class="cena-action primary" onclick="useScene(${i})">Usar</button>
+        <button class="cena-action" onclick="activateScene(${i})">Ativar</button>
+        <button class="cena-action danger" onclick="deleteScene(${i})">✕</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadCaptures() {
+  toPlugin('hemy.capture.list');
+}
+
+function handleCapturesList(payload) {
+  if (!payload || !payload.ok) return;
+  state.captures = payload.items || [];
+}
+
+function handleCaptureSaved(payload) {
+  if (!payload || !payload.ok) toast(payload && payload.error ? payload.error : 'Erro ao salvar cena.', 'error');
+  else { toast('Cena salva!', 'success'); loadCaptures(); }
+}
+
+function addScene() {
+  const name = prompt('Nome da cena:');
+  if (!name || !name.trim()) return;
+  toPlugin('hemy.scene.addPage', { name: name.trim() });
+  setTimeout(loadPages, 500);
+}
+
+function useScene(i) {
+  const s = state.scenes[i];
+  if (!s) return;
+  showLoading('Capturando cena...');
+  toPlugin('hemy.pages.use', { name: s.name, format: s.format || state.captureFormat });
+}
+
+function activateScene(i) {
+  const s = state.scenes[i];
+  if (!s) return;
+  toPlugin('hemy.pages.activate', { name: s.name });
+  toast(`Cena "${s.name}" ativada no SketchUp.`);
+}
+
+function deleteScene(i) {
+  const s = state.scenes[i];
+  if (!s) return;
+  openModal('Remover cena',
+    `Remover a cena <b>${escHtml(s.name)}</b>? Isso apaga o arquivo de captura mas <b>não</b> remove a Page do SketchUp.`,
+    [
+      { label: 'Cancelar', action: closeModal },
+      { label: 'Remover', action: () => { closeModal(); toPlugin('hemy.pages.delete', { name: s.name }); setTimeout(loadPages, 400); }, primary: true }
+    ]);
+}
+
+function deleteAllScenes() {
+  openModal('Limpar todas as cenas',
+    'Isso remove <b>todas as cenas</b> salvas. Não é possível desfazer.',
+    [
+      { label: 'Cancelar', action: closeModal },
+      { label: 'Limpar tudo', action: () => { closeModal(); toPlugin('hemy.pages.deleteMany', { names: state.scenes.map(s => s.name) }); setTimeout(loadPages, 400); }, primary: true }
+    ]);
+}
+
+function importScenes() {
+  toPlugin('hemy.pages.listNative');
+}
+
+function handleNativePagesList(pages) {
+  // Exibe modal de seleção de Pages nativas
+  if (!Array.isArray(pages) || !pages.length) { toast('Nenhuma Page encontrada no SketchUp.'); return; }
+  // Implementação simples: importa todas
+  toPlugin('hemy.pages.import', { pages: pages.map(p => p.name) });
+  setTimeout(loadPages, 800);
+}
+
+function refreshAllThumbs() {
+  showLoading('Atualizando miniaturas...');
+  toPlugin('hemy.pages.refreshThumbs');
+  setTimeout(() => { hideLoading(); loadPages(); }, 3000);
+}
+
+// ─── PANORAMA 360° ────────────────────────────────────────────
+function togglePanoAi() {
+  state.panoApplyAi = !state.panoApplyAi;
+  document.getElementById('toggle-pano-ai').classList.toggle('on', state.panoApplyAi);
+}
+
+function capturePanorama() {
+  showLoading('Capturando panorama 360°... (pode levar alguns minutos)');
+  toPlugin('hemy.panorama.capture', {
+    resolution: document.getElementById('sel-pano-res').value,
+    apply_ai_style: state.panoApplyAi,
+  });
+}
+
+function handlePanorama(payload) {
+  hideLoading();
+  if (!payload || !payload.ok) {
+    toast(payload && payload.error ? payload.error : 'Erro no panorama.', 'error');
+    return;
+  }
+  state.panoDataUrl = payload.dataUrl;
+  const img = document.getElementById('pano-img');
+  img.src = payload.dataUrl;
+  img.style.display = 'block';
+  document.getElementById('pano-empty').style.display = 'none';
+  document.getElementById('btn-save-pano').style.display = 'block';
+  toast('Panorama 360° capturado!', 'success');
+}
+
+function savePanorama() {
+  if (!state.panoDataUrl) return;
+  const ts = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+  const b64 = state.panoDataUrl.replace(/^data:image\/\w+;base64,/, '');
+  toPlugin('hemy.file.save', { filename: `lavi_pano_${ts}.png`, base64: b64, mime: 'image/png' });
+}
+
+// ─── LIMPEZA DO MODELO ────────────────────────────────────────
+function requestCleanup() {
+  openModal('Limpeza do modelo',
+    'Remove materiais, componentes, camadas e estilos não utilizados do modelo SketchUp. Continuar?',
+    [
+      { label: 'Cancelar', action: closeModal },
+      { label: 'Limpar', action: () => { closeModal(); showLoading('Limpando...'); toPlugin('hemy.model.cleanup'); }, primary: true }
+    ]);
+}
+
+function handleCleanup(payload) {
+  hideLoading();
+  if (!payload) return;
+  const d = payload.diff || {};
+  const parts = [];
+  if (d.materials)  parts.push(`${d.materials} materiais`);
+  if (d.components) parts.push(`${d.components} componentes`);
+  if (d.layers)     parts.push(`${d.layers} camadas`);
+  if (d.styles)     parts.push(`${d.styles} estilos`);
+  const msg = parts.length ? `Removidos: ${parts.join(', ')}.` : 'Nada para limpar.';
+  toast(msg, 'success');
+}
+
+// ─── CONFIGURAÇÕES ────────────────────────────────────────────
+function saveGoogleKey() {
+  const key = document.getElementById('input-google-key').value.trim();
+  if (!key) { toast('Insira uma chave válida.', 'error'); return; }
+  state.googleKey = key;
+  localStorage.setItem('lavi_google_key', key);
+  // Salva no plugin (para o Ruby usar em chamadas diretas)
+  toPlugin('hemy.auth.persist', JSON.stringify({ google_key: key }));
+  updateGoogleKeyStatus();
+  toast('Chave salva!', 'success');
+}
+
+function updateGoogleKeyStatus() {
+  const key = state.googleKey || localStorage.getItem('lavi_google_key') || '';
+  const status = document.getElementById('google-key-status');
+  if (key && key.startsWith('AIza')) {
+    status.className = 'key-status ok';
+    status.textContent = 'Configurada ✓';
+  } else {
+    status.className = 'key-status empty';
+    status.textContent = 'Não configurada';
+  }
+}
+
+function pickFolder() {
+  toPlugin('hemy.project.pickFolder');
+}
+
+function toggleCompact() {
+  state.compact = !state.compact;
+  document.getElementById('toggle-compact').classList.toggle('on', state.compact);
+  toPlugin('hemy.ui.compact', { compact: state.compact });
+}
+
+// ─── UPDATE ───────────────────────────────────────────────────
+function handleUpdateInfo(payload) {
+  if (!payload || !payload.ok) return;
+  if (payload.has_update) {
+    state.updateAvailable = true;
+    document.getElementById('update-badge').classList.add('visible');
+    document.getElementById('update-badge').title =
+      `Versão ${payload.remote_version} disponível (atual: ${payload.local_version})`;
+  }
+}
+
+function requestUpdate() {
+  if (!state.updateAvailable) return;
+  openModal('Atualização disponível',
+    'Uma nova versão do plugin LAVI Render está disponível. Instalar agora? O SketchUp precisará ser reiniciado.',
+    [
+      { label: 'Agora não', action: closeModal },
+      { label: 'Instalar', action: () => { closeModal(); showLoading('Instalando atualização...'); toPlugin('hemy.update.install'); }, primary: true }
+    ]);
+}
+
+// ─── MODAL ────────────────────────────────────────────────────
+function openModal(title, body, btns) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  const footer = document.getElementById('modal-footer');
+  footer.innerHTML = '';
+  (btns || []).forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'modal-btn' + (b.primary ? ' primary' : '');
+    el.textContent = b.label;
+    el.onclick = b.action;
+    footer.appendChild(el);
+  });
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ─── LIGHTBOX ─────────────────────────────────────────────────
+function openLightbox(src) {
+  if (!src) return;
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+}
+document.getElementById('lightbox').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeLightbox();
+});
+
+// ─── LOADING ──────────────────────────────────────────────────
+function showLoading(msg) {
+  document.getElementById('loading-msg').textContent = msg || 'Aguarde...';
+  document.getElementById('loading-overlay').classList.add('open');
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.remove('open');
+}
+
+// ─── PROGRESSO ────────────────────────────────────────────────
+function showProgress(label) {
+  const el = document.getElementById('render-progress');
+  el.classList.add('visible');
+  setProgress(5, label);
+}
+function setProgress(pct, label) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+  if (label) document.getElementById('progress-label').textContent = label;
+}
+function hideProgress() {
+  setProgress(100, 'Concluído!');
+  setTimeout(() => {
+    document.getElementById('render-progress').classList.remove('visible');
+    setProgress(0, '');
+  }, 800);
+}
+
+// ─── TOAST ────────────────────────────────────────────────────
+function toast(msg, type) {
+  const c = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escJs(s) {
+  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"');
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
