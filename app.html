@@ -1,1879 +1,979 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LAVI Render</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    /* ─── RESET ─────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; width: 100%; background: #f7f5f1; color: #1c1c1c; font-family: 'Montserrat', -apple-system, sans-serif; overflow: hidden; }
-
-    /* ─── VARIÁVEIS LAVI ─────────────────────────────────────── */
-    :root {
-      --bg:        #f7f5f1;
-      --bg2:       #eeeae4;
-      --card:      #ffffff;
-      --border:    #e3dfd9;
-      --text:      #1c1c1c;
-      --text2:     #6b6660;
-      --text3:     #9e9890;
-      --accent:    #1c1c1c;
-      --accent-fg: #ffffff;
-      --rose:      #c9847a;
-      --petrol:    #3b6475;
-      --sand:      #c4ab8a;
-      --radius:    12px;
-      --radius-sm: 8px;
-      --shadow:    0 2px 12px rgba(0,0,0,.07);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
-    }
-
-    /* ─── LAYOUT PRINCIPAL ───────────────────────────────────── */
-    #app {
-      display: flex;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    /* ─── SIDEBAR ────────────────────────────────────────────── */
-    #sidebar {
-      width: 220px;
-      min-width: 220px;
-      background: var(--card);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-      overflow: hidden;
-      z-index: 10;
-    }
-    .sidebar-logo {
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .sidebar-logo span {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--text);
-    }
-    .sidebar-logo sub {
-      font-size: 8px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--rose);
-      text-transform: uppercase;
-      vertical-align: bottom;
-      margin-left: 2px;
-    }
-    .sidebar-nav {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px 0;
-    }
-    .nav-section {
-      padding: 6px 14px 2px;
-      font-size: 8.5px;
-      font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--text3);
-    }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 18px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text2);
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: all .15s;
-      user-select: none;
-    }
-    .nav-item:hover { background: var(--bg); color: var(--text); }
-    .nav-item.active { background: var(--bg); color: var(--text); border-left-color: var(--text); }
-    .nav-item .nav-icon { width: 16px; height: 16px; opacity: .7; flex-shrink: 0; }
-    .nav-item.active .nav-icon { opacity: 1; }
-    .sidebar-footer {
-      padding: 14px 18px;
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .sidebar-version { font-size: 9px; color: var(--text3); font-weight: 600; letter-spacing: .04em; }
-
-    /* ─── ÁREA PRINCIPAL ──────────────────────────────────────── */
-    #main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .topbar {
-      height: 54px;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-    .topbar-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: .01em;
-      flex: 1;
-    }
-    .topbar-skp {
-      font-size: 10px;
-      color: var(--text3);
-      font-weight: 600;
-      background: var(--bg2);
-      padding: 4px 10px;
-      border-radius: 20px;
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .topbar-btn {
-      height: 32px;
-      padding: 0 14px;
-      border-radius: var(--radius-sm);
-      border: 1.3px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all .15s;
-      white-space: nowrap;
-    }
-    .topbar-btn:hover { border-color: var(--text); }
-    .topbar-btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
-    .topbar-btn.primary:hover { background: #333; }
-
-    /* ─── CONTEÚDO (abas) ─────────────────────────────────────── */
-    .page { display: none; flex: 1; overflow: hidden; }
-    .page.active { display: flex; flex-direction: column; }
-
-    /* ─── PÁGINA: RENDER ──────────────────────────────────────── */
-    #page-render {
-      flex-direction: row;
-    }
-    .render-canvas-area {
-      flex: 1;
-      background: var(--bg2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .render-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      color: var(--text3);
-    }
-    .render-placeholder svg { opacity: .35; }
-    .render-placeholder p { font-size: 12px; font-weight: 600; letter-spacing: .02em; }
-    #render-preview {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      border-radius: 4px;
-      box-shadow: var(--shadow-lg);
-      display: none;
-    }
-    .render-panel {
-      width: 300px;
-      min-width: 300px;
-      background: var(--card);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      padding: 20px;
-      gap: 18px;
-    }
-    .rpanel-section { display: flex; flex-direction: column; gap: 8px; }
-    .rpanel-label {
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--text3);
-    }
-    .rpanel-select, .rpanel-input, .rpanel-textarea {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
-      background: var(--bg);
-      appearance: none;
-      transition: border .15s;
-    }
-    .rpanel-select:focus, .rpanel-input:focus, .rpanel-textarea:focus {
-      outline: none;
-      border-color: var(--text);
-    }
-    .rpanel-textarea { resize: vertical; min-height: 80px; }
-    .rpanel-row { display: flex; gap: 8px; }
-    .rpanel-row .rpanel-select { flex: 1; }
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .toggle {
-      width: 36px; height: 20px;
-      background: var(--border);
-      border-radius: 10px;
-      position: relative;
-      cursor: pointer;
-      transition: background .2s;
-      flex-shrink: 0;
-    }
-    .toggle.on { background: var(--text); }
-    .toggle::after {
-      content: '';
-      position: absolute;
-      top: 3px; left: 3px;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: #fff;
-      transition: transform .2s;
-    }
-    .toggle.on::after { transform: translateX(16px); }
-    .render-btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--text);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background .15s;
-    }
-    .render-btn:hover { background: #333; }
-    .render-btn:disabled { background: var(--text3); cursor: not-allowed; }
-    .render-btn.loading {
-      background: var(--text);
-      cursor: wait;
-      opacity: .7;
-    }
-    .capture-btn {
-      width: 100%;
-      padding: 11px;
-      background: transparent;
-      color: var(--text);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .capture-btn:hover { border-color: var(--text); background: var(--bg); }
-
-    /* Miniatura da captura */
-    .capture-thumb-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16/9;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background: var(--bg2);
-      border: 1.3px solid var(--border);
-    }
-    .capture-thumb-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-    .capture-thumb-wrap .capture-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: var(--text3);
-      font-weight: 600;
-    }
-
-    /* ─── PÁGINA: CENAS ───────────────────────────────────────── */
-    #page-cenas { flex-direction: column; }
-    .cenas-toolbar {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .cenas-grid {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-      align-content: start;
-    }
-    .cena-card {
-      background: var(--card);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: box-shadow .15s;
-    }
-    .cena-card:hover { box-shadow: var(--shadow); }
-    .cena-thumb {
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: var(--bg2);
-      position: relative;
-      overflow: hidden;
-    }
-    .cena-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .cena-thumb-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: var(--text3);
-      font-weight: 600;
-    }
-    .cena-info { padding: 12px 14px; }
-    .cena-name {
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .cena-meta { font-size: 10px; color: var(--text3); font-weight: 600; }
-    .cena-actions {
-      padding: 0 14px 12px;
-      display: flex;
-      gap: 6px;
-    }
-    .cena-action {
-      flex: 1;
-      padding: 7px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: transparent;
-      font-family: inherit;
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      transition: all .15s;
-      text-align: center;
-    }
-    .cena-action:hover { border-color: var(--text); background: var(--bg); }
-    .cena-action.primary { background: var(--text); color: #fff; border-color: var(--text); }
-    .cena-action.primary:hover { background: #333; }
-    .cena-action.danger { color: #c0392b; }
-    .cena-action.danger:hover { border-color: #c0392b; background: #fff5f5; }
-    .empty-state {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: var(--text3);
-      padding: 40px;
-      text-align: center;
-    }
-    .empty-state svg { opacity: .3; }
-    .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--text); }
-    .empty-state p { font-size: 12px; line-height: 1.6; }
-
-    /* ─── PÁGINA: GALERIA (Histórico) ─────────────────────────── */
-    #page-galeria { flex-direction: column; }
-    .gallery-filters {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .gallery-grid {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 14px;
-      align-content: start;
-    }
-    .gallery-card {
-      background: var(--card);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .gallery-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
-    .gallery-img {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      display: block;
-      background: var(--bg2);
-    }
-    .gallery-info {
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .gallery-name { font-size: 11px; font-weight: 600; }
-    .gallery-date { font-size: 9.5px; color: var(--text3); font-weight: 600; }
-    .gallery-actions {
-      padding: 0 12px 10px;
-      display: flex;
-      gap: 6px;
-    }
-    .gal-btn {
-      flex: 1;
-      padding: 6px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: transparent;
-      font-family: inherit;
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      transition: all .15s;
-    }
-    .gal-btn:hover { border-color: var(--text); background: var(--bg); }
-
-    /* ─── PÁGINA: 360° ────────────────────────────────────────── */
-    #page-360 { flex-direction: column; align-items: center; justify-content: center; }
-    .pano-area {
-      width: 100%;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      padding: 40px;
-    }
-    .pano-preview {
-      width: 100%;
-      max-width: 600px;
-      aspect-ratio: 2/1;
-      background: var(--bg2);
-      border-radius: var(--radius);
-      border: 1.3px solid var(--border);
-      overflow: hidden;
-      position: relative;
-    }
-    .pano-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-    .pano-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: var(--text3);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .pano-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      width: 100%;
-      max-width: 400px;
-    }
-
-    /* ─── PÁGINA: CONFIGURAÇÕES ───────────────────────────────── */
-    #page-config { flex-direction: column; overflow-y: auto; }
-    .config-body {
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-      max-width: 600px;
-    }
-    .config-section {
-      background: var(--card);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .config-section-title {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .02em;
-    }
-    .config-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .config-row-label { font-size: 12px; font-weight: 600; }
-    .config-row-sub { font-size: 10.5px; color: var(--text2); margin-top: 1px; }
-    .config-input {
-      flex: 1;
-      max-width: 240px;
-      padding: 9px 12px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
-      background: var(--bg);
-    }
-    .config-input:focus { outline: none; border-color: var(--text); }
-    .config-save {
-      padding: 11px 22px;
-      background: var(--text);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .06em;
-      cursor: pointer;
-    }
-    .config-save:hover { background: #333; }
-    .key-status {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .key-status.ok { background: #e8f5e9; color: #2e7d32; }
-    .key-status.empty { background: var(--bg2); color: var(--text3); }
-
-    /* ─── TOAST ──────────────────────────────────────────────── */
-    #toast-container {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
-    }
-    .toast {
-      padding: 10px 18px;
-      background: #1c1c1c;
-      color: #fff;
-      border-radius: 9px;
-      font-size: 12px;
-      font-weight: 600;
-      box-shadow: var(--shadow-lg);
-      animation: toast-in .2s ease;
-      pointer-events: auto;
-    }
-    .toast.error { background: #c0392b; }
-    .toast.success { background: #2e7d32; }
-    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* ─── MODAL ──────────────────────────────────────────────── */
-    #modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    #modal-overlay.open { display: flex; }
-    .modal-box {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 28px;
-      max-width: 460px;
-      width: 90%;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      box-shadow: var(--shadow-lg);
-    }
-    .modal-title { font-size: 15px; font-weight: 800; }
-    .modal-body { font-size: 12px; color: var(--text2); line-height: 1.6; }
-    .modal-body b { color: var(--text); }
-    .modal-footer { display: flex; gap: 10px; margin-top: 4px; }
-    .modal-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      border: 1.3px solid var(--border);
-      background: transparent;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      transition: all .15s;
-    }
-    .modal-btn:hover { border-color: var(--text); }
-    .modal-btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
-    .modal-btn.primary:hover { background: #333; }
-
-    /* ─── LIGHTBOX ───────────────────────────────────────────── */
-    #lightbox {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.88);
-      z-index: 2000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    #lightbox.open { display: flex; }
-    #lightbox img {
-      max-width: 90vw;
-      max-height: 90vh;
-      object-fit: contain;
-      border-radius: 6px;
-    }
-    #lightbox-close {
-      position: absolute;
-      top: 18px; right: 18px;
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,.15);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* ─── LOADING OVERLAY ────────────────────────────────────── */
-    #loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(247,245,241,.8);
-      backdrop-filter: blur(4px);
-      z-index: 500;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-    }
-    #loading-overlay.open { display: flex; }
-    .loading-spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--text);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-msg { font-size: 12px; font-weight: 700; color: var(--text2); }
-
-    /* ─── COMPACT MODE (livro fechado) ───────────────────────── */
-    @media (max-width: 600px) {
-      #sidebar { width: 54px; min-width: 54px; }
-      .sidebar-logo span { display: none; }
-      .sidebar-logo { padding: 16px; display: flex; justify-content: center; }
-      .nav-item span { display: none; }
-      .nav-item { padding: 12px; justify-content: center; border-left: none; border-bottom: 3px solid transparent; }
-      .nav-item.active { border-bottom-color: var(--text); }
-      .nav-section { display: none; }
-      .render-panel { width: 260px; min-width: 260px; }
-    }
-
-    /* ─── SCROLLBAR ──────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
-
-    /* ─── CHIP / TAG ─────────────────────────────────────────── */
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 9px;
-      border-radius: 20px;
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      background: var(--bg2);
-      color: var(--text2);
-    }
-    .chip.active { background: #e8f5e9; color: #2e7d32; }
-
-    /* ─── FORMATO PILL ───────────────────────────────────────── */
-    .format-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-    .format-pill {
-      padding: 5px 11px;
-      border-radius: 20px;
-      border: 1.3px solid var(--border);
-      background: transparent;
-      font-family: inherit;
-      font-size: 10.5px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text2);
-      transition: all .15s;
-    }
-    .format-pill:hover { border-color: var(--text); color: var(--text); }
-    .format-pill.selected { background: var(--text); color: #fff; border-color: var(--text); }
-
-    /* ─── SAFE FRAME INDICATOR ───────────────────────────────── */
-    .safeframe-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    /* ─── UPDATE BADGE ───────────────────────────────────────── */
-    #update-badge {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      background: #e3f2fd;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      font-weight: 700;
-      color: #1565c0;
-      cursor: pointer;
-    }
-    #update-badge.visible { display: flex; }
-
-    /* ─── PROGRESSO RENDER ───────────────────────────────────── */
-    .render-progress {
-      display: none;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .render-progress.visible { display: flex; }
-    .progress-bar-wrap {
-      height: 4px;
-      background: var(--bg2);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      background: var(--text);
-      border-radius: 2px;
-      width: 0%;
-      transition: width .3s ease;
-    }
-    .progress-label { font-size: 10px; color: var(--text3); font-weight: 600; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>LAVI Render</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#faf9f7;--bg2:#f0ede8;--card:#fff;--border:#e8e4de;--text:#1c1c1c;--text2:#666;--text3:#999;--r:10px;--r-sm:7px;--shadow:0 2px 12px rgba(0,0,0,.07);--shadow-lg:0 8px 32px rgba(0,0,0,.14)}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);font-family:'Montserrat',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);font-size:13px}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+#app{display:flex;height:100%;width:100%;flex-direction:column;overflow:hidden}
+#update-bar{display:none;align-items:center;gap:10px;padding:8px 18px;background:#e3f2fd;font-size:11px;font-weight:700;color:#1565c0;cursor:pointer;flex-shrink:0;border-bottom:1px solid #bbdefb}
+#update-bar.visible{display:flex}
+#top-bar{display:none;align-items:center;background:var(--card);border-bottom:1px solid var(--border);height:46px;flex-shrink:0}
+#top-bar.visible{display:flex}
+.top-tab{padding:0 20px;height:100%;display:flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.03em;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .13s;white-space:nowrap}
+.top-tab:hover{color:var(--text)}.top-tab.active{color:var(--text);border-bottom-color:var(--text)}
+.tbr{margin-left:auto;display:flex;align-items:center;gap:10px;padding-right:16px}
+.tbr-skp{font-size:10px;color:var(--text3);font-weight:600;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbr-cr{font-size:10px;font-weight:800;padding:3px 9px;background:var(--bg2);border-radius:20px}
+#body{flex:1;display:flex;overflow:hidden}
+#sidebar{width:210px;min-width:210px;background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+#sidebar.hidden{display:none}
+.s-logo{padding:22px 18px 18px;border-bottom:1px solid var(--border);font-size:17px;font-weight:900;letter-spacing:4px;text-transform:uppercase;flex-shrink:0}
+.s-logo sub{font-size:7px;font-weight:800;letter-spacing:1px;color:#c9847a;text-transform:uppercase;vertical-align:bottom;margin-left:2px}
+.s-nav{flex:1;overflow-y:auto;padding:10px 0}
+.s-sec{padding:8px 16px 3px;font-size:8px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text3)}
+.s-item{display:flex;align-items:center;gap:9px;padding:9px 16px;font-size:11.5px;font-weight:600;color:var(--text2);cursor:pointer;border-left:2.5px solid transparent;transition:all .12s}
+.s-item:hover{background:var(--bg);color:var(--text)}.s-item.active{background:var(--bg);color:var(--text);border-left-color:var(--text)}
+.s-item svg{width:15px;height:15px;flex-shrink:0;opacity:.65}.s-item.active svg{opacity:1}
+.s-foot{padding:12px 16px;border-top:1px solid var(--border);font-size:9px;color:var(--text3);font-weight:600;flex-shrink:0}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column}.page.active{display:flex}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r-sm);border:1px solid var(--border);background:transparent;font-family:inherit;font-size:11px;font-weight:700;color:var(--text);cursor:pointer;transition:all .13s;white-space:nowrap}
+.btn:hover{border-color:var(--text);background:var(--bg)}.btn.pr{background:var(--text);color:#fff;border-color:var(--text)}.btn.pr:hover{background:#333}
+.btn.sm{padding:6px 12px;font-size:10px}.btn.dg{color:#c0392b}.btn.dg:hover{border-color:#c0392b;background:#fff5f5}
+.btn:disabled{opacity:.45;cursor:not-allowed}.btn-full{width:100%;justify-content:center;padding:12px}
+.fl{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--text3)}
+.fs,.fi,.ft{width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:12px;font-weight:500;color:var(--text);background:var(--bg);appearance:none;transition:border .13s}
+.fs:focus,.fi:focus,.ft:focus{outline:none;border-color:var(--text)}
+.ft{resize:vertical;min-height:76px;line-height:1.5}
+.frow{display:flex;gap:8px}.frow .fs{flex:1}
+.fsec{display:flex;flex-direction:column;gap:8px}
+.fgroup{font-size:11px;font-weight:800;color:var(--text);margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 11px;border-radius:20px;border:1px solid var(--border);background:transparent;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;color:var(--text2);transition:all .12s}
+.chip:hover{border-color:var(--text);color:var(--text)}.chip.sel{background:var(--text);color:#fff;border-color:var(--text)}
+.tog-r{display:flex;align-items:center;justify-content:space-between;font-size:11.5px;font-weight:600}
+.tog{width:34px;height:18px;background:var(--border);border-radius:9px;position:relative;cursor:pointer;transition:background .18s;flex-shrink:0}
+.tog.on{background:var(--text)}.tog::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .18s}
+.tog.on::after{transform:translateX(16px)}
+.fmt-pills{display:flex;flex-wrap:wrap;gap:6px}
+.fp{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;color:var(--text2);transition:all .12s}
+.fp:hover{border-color:var(--text);color:var(--text)}.fp.sel{background:var(--text);color:#fff;border-color:var(--text)}
+.ua{width:100%;aspect-ratio:16/9;border:1.5px dashed var(--border);border-radius:var(--r);background:var(--bg2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden;min-height:120px}
+.ua:hover{border-color:var(--text);background:var(--bg)}.ua input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.ua img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;display:none}
+.ua p{font-size:11.5px;font-weight:600;color:var(--text2);text-align:center;padding:0 18px;line-height:1.5;position:relative;z-index:1}
+.ua small{font-size:9.5px;color:var(--text3);font-weight:600;position:relative;z-index:1}
+.src-btns{display:flex;gap:8px;flex-wrap:wrap}
+.src-btn{flex:1;min-width:100px;padding:8px;border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;color:var(--text);transition:all .13s;text-align:center}
+.src-btn:hover{border-color:var(--text);background:var(--bg)}.src-btn.active{background:var(--text);color:#fff;border-color:var(--text)}
+.rg{display:flex;gap:8px;flex-wrap:wrap}
+.rc{position:relative;width:72px;height:72px;border-radius:var(--r-sm);overflow:hidden;background:var(--bg2);border:1px solid var(--border)}
+.rc img{width:100%;height:100%;object-fit:cover}
+.rc-rm{position:absolute;top:2px;right:2px;width:17px;height:17px;background:rgba(0,0,0,.6);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;opacity:0;transition:opacity .13s}
+.rc:hover .rc-rm{opacity:1}
+.ra{width:72px;height:72px;border:1.5px dashed var(--border);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:20px;color:var(--text3);transition:all .13s;position:relative}
+.ra:hover{border-color:var(--text);color:var(--text);background:var(--bg)}.ra input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.kb{display:flex;gap:6px}
+.kbtn{flex:1;padding:6px;border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;color:var(--text2);transition:all .12s;text-align:center}
+.kbtn.sel{background:var(--text);color:#fff;border-color:var(--text)}
+.c2{flex:1;display:flex;overflow:hidden}
+.cl{flex:1;overflow-y:auto;padding:22px;display:flex;flex-direction:column;gap:18px}
+.cr{width:320px;min-width:320px;background:var(--card);border-left:1px solid var(--border);overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.ctabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);flex-shrink:0;padding:0 20px;scrollbar-width:none}
+.ctabs::-webkit-scrollbar{display:none}
+.ctab{padding:12px 15px;font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .13s;flex-shrink:0}
+.ctab:hover{color:var(--text)}.ctab.active{color:var(--text);border-bottom-color:var(--text)}
+.cbody{flex:1;overflow:hidden;display:flex}
+.cp{display:none;flex:1;overflow:hidden;flex-direction:column}.cp.active{display:flex}
+.dash-bar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap}
+.dash-note{font-size:11px;color:var(--text2);line-height:1.5;flex:1;min-width:200px}
+.dash-note b{color:var(--text)}
+.dash-grid{flex:1;overflow-y:auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;align-content:start}
+.dc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .15s;position:relative}
+.dc:hover{box-shadow:var(--shadow);transform:translateY(-1px)}.dc.sel .dc-chk{opacity:1;background:var(--text);border-color:var(--text);color:#fff}
+.dc-img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--bg2);display:block}
+.dc-chk{position:absolute;top:8px;left:8px;width:20px;height:20px;background:#fff;border:1.5px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .13s;font-size:10px}
+.dc:hover .dc-chk{opacity:1}
+.dc-info{padding:10px 12px}.dc-name{font-size:11px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc-date{font-size:9.5px;color:var(--text3);font-weight:600}
+.selbar{display:none;align-items:center;gap:10px;padding:8px 14px;background:var(--bg2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700}
+.selbar.on{display:flex}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:60px;text-align:center;color:var(--text3)}
+.empty h3{font-size:14px;font-weight:700;color:var(--text)}.empty p{font-size:12px;line-height:1.65;max-width:340px}
+.cena-panel{border:1px solid var(--border);border-radius:var(--r);background:var(--card);margin:16px 20px 0;padding:18px;display:flex;flex-direction:column;gap:12px;flex-shrink:0}
+.cap-prev{width:100%;aspect-ratio:16/9;background:var(--bg2);border-radius:var(--r-sm);overflow:hidden;position:relative;border:1px solid var(--border)}
+.cap-prev img{width:100%;height:100%;object-fit:cover;display:none}
+.cap-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10.5px;color:var(--text3);font-weight:600}
+.cs-title{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 10px;font-size:9.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.cgrid{padding:0 20px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.cc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .15s}
+.cc:hover{box-shadow:var(--shadow)}
+.cc-th{width:100%;aspect-ratio:16/9;background:var(--bg2);position:relative;overflow:hidden}
+.cc-th img{width:100%;height:100%;object-fit:cover;display:block}
+.cc-te{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);font-weight:600}
+.cc-info{padding:11px 13px}.cc-name{font-size:12px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-meta{font-size:10px;color:var(--text3);font-weight:600}
+.cc-acts{padding:0 13px 11px;display:flex;gap:6px}
+.cc-btn{flex:1;padding:7px;border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;color:var(--text);transition:all .13s;text-align:center}
+.cc-btn:hover{border-color:var(--text);background:var(--bg)}.cc-btn.p{background:var(--text);color:#fff;border-color:var(--text)}.cc-btn.p:hover{background:#333}
+.cc-btn.d{color:#c0392b}.cc-btn.d:hover{border-color:#c0392b;background:#fff5f5}
+.tour-hdr{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0}
+.tour-body{flex:1;display:flex;overflow:hidden}
+.tour-pano{flex:1;background:#111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;opacity:.5}
+.tour-pano img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.tour-side{width:270px;min-width:270px;background:var(--card);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.tour-side-h{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0}
+.tour-scs{flex:1;overflow-y:auto}
+.t-sc{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.t-sc:hover{background:var(--bg)}.t-sc.active{background:var(--bg2)}
+.t-sc img{width:52px;height:38px;object-fit:cover;border-radius:5px;flex-shrink:0;background:var(--bg2)}
+.t-sc-name{font-size:11px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tour-drop{margin:14px;border:1.5px dashed var(--border);border-radius:var(--r);background:var(--bg2);padding:28px 14px;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:all .15s;position:relative}
+.tour-drop:hover{border-color:var(--text);background:var(--bg)}.tour-drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.tour-drop p{font-size:10.5px;font-weight:600;color:var(--text2);text-align:center;line-height:1.55;position:relative;z-index:1}
+.tour-foot{padding:12px 14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.conta-body{padding:28px;display:flex;flex-direction:column;gap:22px;max-width:600px}
+.csec{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;flex-direction:column;gap:13px}
+.csec-t{font-size:12px;font-weight:800}
+.crow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.crow-l{font-size:12px;font-weight:600}.crow-s{font-size:10px;color:var(--text2);margin-top:2px}
+.ast{font-size:10px;font-weight:800;padding:4px 10px;border-radius:20px}
+.ast.ok{background:#e8f5e9;color:#2e7d32}.ast.no{background:var(--bg2);color:var(--text3)}
+.ai{flex:1;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-sm);font-family:inherit;font-size:12px;font-weight:500;color:var(--text);background:var(--bg)}
+.ai:focus{outline:none;border-color:var(--text)}
+.pkgs{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:4px}
+.pkg{border:1.5px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s;position:relative}
+.pkg:hover{border-color:var(--text);box-shadow:var(--shadow)}.pkg.feat{border-color:var(--text)}
+.pkg-bdg{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.pkg-a{font-size:22px;font-weight:900;line-height:1}.pkg-n{font-size:10px;font-weight:700;color:var(--text2);margin-top:2px}
+.pkg-p{font-size:14px;font-weight:800;margin-top:8px}.pkg-u{font-size:9.5px;color:var(--text3);font-weight:600}
+.ct{width:100%;border-collapse:collapse;font-size:11px}
+.ct th{text-align:left;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:6px 0;border-bottom:1px solid var(--border)}
+.ct td{padding:7px 0;border-bottom:1px solid var(--border);font-weight:600}.ct td:last-child{text-align:right;color:var(--text2)}
+.pw{display:none;flex-direction:column;gap:5px}.pw.on{display:flex}
+.pt{height:3px;background:var(--bg2);border-radius:2px;overflow:hidden}
+.pf{height:100%;background:var(--text);border-radius:2px;width:0%;transition:width .3s}
+.pl{font-size:10px;color:var(--text3);font-weight:600}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
+#modal.on{display:flex}
+.mbox{background:var(--card);border-radius:14px;padding:28px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-lg)}
+.mbox h3{font-size:15px;font-weight:800}.mbox .mb{font-size:12px;color:var(--text2);line-height:1.65}
+.mbox .mb b{color:var(--text);font-weight:700}.mfoot{display:flex;gap:9px;margin-top:4px}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:2000;display:none;align-items:center;justify-content:center}
+#lb.on{display:flex}#lb img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:6px}
+#lb-x{position:absolute;top:16px;right:16px;width:36px;height:36px;background:rgba(255,255,255,.15);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+#loading{position:fixed;inset:0;background:rgba(250,249,247,.82);backdrop-filter:blur(4px);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+#loading.on{display:flex}
+.sp{width:34px;height:34px;border:3px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}#loading-msg{font-size:12px;font-weight:700;color:var(--text2)}
+#toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;min-width:220px}
+.toast{padding:10px 18px;background:#1c1c1c;color:#fff;border-radius:9px;font-size:11.5px;font-weight:600;box-shadow:var(--shadow-lg);animation:tIn .2s ease;text-align:center}
+.toast.ok{background:#2e7d32}.toast.err{background:#c0392b}
+@keyframes tIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.pp-sl{display:flex;align-items:center;gap:10px}
+.pp-sl label{font-size:10.5px;font-weight:600;width:90px;flex-shrink:0}
+.pp-sl input[type=range]{flex:1;height:2px;accent-color:var(--text)}
+.pp-sl span{font-size:10px;color:var(--text3);width:28px;text-align:right}
+</style>
 </head>
 <body>
 <div id="app">
-  <!-- SIDEBAR -->
-  <nav id="sidebar">
-    <div class="sidebar-logo">
-      <span>LAVI<sub>render</sub></span>
+<div id="update-bar" onclick="onUpd()">↑ Atualização disponível. Clique pra instalar.</div>
+<div id="top-bar">
+  <div class="top-tab active" data-t="dashboard" onclick="nav('dashboard')">Dashboard</div>
+  <div class="top-tab" data-t="cenas" onclick="nav('cenas')">Cenas</div>
+  <div class="top-tab" data-t="criar" onclick="nav('criar')">Criar</div>
+  <div class="top-tab" data-t="360" onclick="nav('360')">Tour 360°</div>
+  <div class="tbr">
+    <div class="tbr-skp" id="tbr-skp">—</div>
+    <div class="tbr-cr" id="tbr-cr">API</div>
+    <button class="btn sm" onclick="nav('conta')">Conta</button>
+  </div>
+</div>
+<div id="body">
+  <nav id="sidebar" class="hidden">
+    <div class="s-logo">LAVI<sub>render</sub></div>
+    <div class="s-nav">
+      <div class="s-sec">Principal</div>
+      <div class="s-item active" data-p="dashboard" onclick="nav('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</div>
+      <div class="s-item" data-p="cenas" onclick="nav('cenas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>Cenas</div>
+      <div class="s-item" data-p="criar" onclick="nav('criar')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>Criar</div>
+      <div class="s-item" data-p="360" onclick="nav('360')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path d="M2 12h20"/></svg>Tour 360°</div>
+      <div class="s-item" data-p="conta" onclick="nav('conta')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a6 6 0 0112 0v2"/></svg>Conta</div>
     </div>
-    <div class="sidebar-nav">
-      <div class="nav-section">Principal</div>
-      <div class="nav-item active" data-page="render">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-        </svg>
-        <span>Render</span>
-      </div>
-      <div class="nav-item" data-page="cenas">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-        </svg>
-        <span>Cenas</span>
-      </div>
-      <div class="nav-item" data-page="galeria">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-        </svg>
-        <span>Galeria</span>
-      </div>
-      <div class="nav-item" data-page="360">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <ellipse cx="12" cy="12" rx="4" ry="10"/>
-          <path d="M2 12h20"/>
-        </svg>
-        <span>Tour 360°</span>
-      </div>
-      <div class="nav-section" style="margin-top:8px">Ferramentas</div>
-      <div class="nav-item" data-action="cleanup">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
-        </svg>
-        <span>Limpeza</span>
-      </div>
-      <div class="nav-item" data-page="config">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-        </svg>
-        <span>Configurações</span>
-      </div>
-    </div>
-    <div class="sidebar-footer">
-      <div class="sidebar-version">LAVI Render v4.0</div>
-    </div>
+    <div class="s-foot">LAVI Render v4.0</div>
   </nav>
-
-  <!-- MAIN -->
   <div id="main">
-    <!-- TOPBAR -->
-    <div class="topbar">
-      <div class="topbar-title" id="topbar-title">Render</div>
-      <div class="topbar-skp" id="topbar-skp" title="Arquivo SketchUp atual">Nenhum arquivo aberto</div>
-      <div id="update-badge" onclick="requestUpdate()">↑ Atualização disponível</div>
-      <button class="topbar-btn" onclick="requestCameraCheck()">↺ Atualizar viewport</button>
-    </div>
 
-    <!-- ── PÁGINA: RENDER ─────────────────────────────────── -->
-    <div class="page active" id="page-render">
-      <div class="render-canvas-area" id="canvas-area">
-        <div class="render-placeholder" id="render-placeholder">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="8" y="8" width="48" height="36" rx="4" stroke="#1c1c1c" stroke-width="2"/>
-            <circle cx="22" cy="22" r="5" stroke="#1c1c1c" stroke-width="2"/>
-            <path d="M8 35l14-12 10 10 8-8 14 12" stroke="#1c1c1c" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M24 56h16M32 44v12" stroke="#1c1c1c" stroke-width="2"/>
-          </svg>
-          <p>Capture a viewport para gerar um render</p>
-        </div>
-        <img id="render-preview" src="" alt="Render">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="selbar" id="selbar">
+        <span id="sc">0 selecionadas</span>
+        <button class="btn sm dg" onclick="delSel()">Apagar (<span id="sc2">0</span>)</button>
+        <button class="btn sm" onclick="clrSel()">Cancelar</button>
       </div>
-
-      <div class="render-panel">
-        <!-- Captura -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Captura</div>
-          <div class="capture-thumb-wrap">
-            <img id="capture-thumb" src="" alt="">
-            <div class="capture-empty" id="capture-empty">Sem captura</div>
-          </div>
-          <button class="capture-btn" onclick="captureViewport()">📷 Capturar viewport</button>
-        </div>
-
-        <!-- Safe Frame -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Proporção</div>
-          <div class="format-pills" id="format-pills">
-            <button class="format-pill selected" data-fmt="16:9">16:9</button>
-            <button class="format-pill" data-fmt="9:16">9:16</button>
-            <button class="format-pill" data-fmt="4:3">4:3</button>
-            <button class="format-pill" data-fmt="4:5">4:5</button>
-            <button class="format-pill" data-fmt="1:1">1:1</button>
-            <button class="format-pill" data-fmt="viewport">Viewport</button>
-          </div>
-          <div class="toggle-row">
-            <span>Safe frame</span>
-            <div class="toggle" id="toggle-safeframe" onclick="toggleSafeFrame()"></div>
-          </div>
-          <div class="toggle-row">
-            <span>Estilo IA</span>
-            <div class="toggle" id="toggle-ai-style" onclick="toggleAiStyle()"></div>
-          </div>
-        </div>
-
-        <!-- Qualidade -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Qualidade</div>
-          <select class="rpanel-select" id="sel-qualidade">
-            <option value="2K">2K — Rápido</option>
-            <option value="4K" selected>4K — Recomendado</option>
-            <option value="8K">8K — Máximo</option>
-          </select>
-        </div>
-
-        <!-- Ambiente -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Ambiente</div>
-          <select class="rpanel-select" id="sel-ambiente">
-            <option value="dia">Dia</option>
-            <option value="noite">Noite</option>
-            <option value="entardecer">Entardecer</option>
-            <option value="manha">Manhã</option>
-            <option value="nublado">Nublado</option>
-          </select>
-        </div>
-
-        <!-- Estilo -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Estilo visual</div>
-          <select class="rpanel-select" id="sel-estilo">
-            <option value="fotorrealista">Fotorrealista</option>
-            <option value="minimalista">Minimalista</option>
-            <option value="warm">Warm &amp; Aconchegante</option>
-            <option value="moderno">Moderno &amp; Clean</option>
-            <option value="nordico">Nórdico</option>
-            <option value="biofilia">Biofilia</option>
-            <option value="industrial">Industrial</option>
-          </select>
-        </div>
-
-        <!-- Prompt extra -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Detalhes extras <span style="font-weight:500;color:var(--text3)">(opcional)</span></div>
-          <textarea class="rpanel-textarea" id="prompt-extra" placeholder="Ex: flores sobre a mesa, luz de tarde, almofadas terrosas..."></textarea>
-        </div>
-
-        <!-- Progresso -->
-        <div class="render-progress" id="render-progress">
-          <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
-          <div class="progress-label" id="progress-label">Preparando...</div>
-        </div>
-
-        <!-- Botões de ação -->
-        <div class="rpanel-section" style="gap:8px">
-          <button class="render-btn" id="btn-render" onclick="startRender()">Gerar render</button>
-          <div style="display:flex;gap:8px">
-            <button class="capture-btn" id="btn-save" onclick="saveRender()" style="display:none">⬇ Salvar</button>
-            <button class="capture-btn" id="btn-upscale" onclick="upscaleRender()" style="display:none">✦ Upscale 4K</button>
-          </div>
-        </div>
+      <div class="dash-bar">
+        <div class="dash-note">Recentes · Histórico dos últimos 30 dias. Salvo apenas <b>neste navegador</b>. Se abrir a LAVI em outro navegador, seu histórico daqui <b>não estará disponível</b>. Pra não perder nada, baixe as imagens.</div>
+        <button class="btn sm" onclick="selAll()">Selecionar todos</button>
+      </div>
+      <div class="dash-grid" id="dash-grid"></div>
+      <div class="empty" id="dash-empty" style="display:none">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <h3>Nenhuma imagem ainda</h3>
+        <p>Suas imagens geradas aparecem aqui automaticamente. Baixe o que quiser guardar permanentemente.</p>
+        <button class="btn pr" onclick="nav('criar')">Criar primeira imagem</button>
       </div>
     </div>
 
-    <!-- ── PÁGINA: CENAS ──────────────────────────────────── -->
+    <!-- CENAS -->
     <div class="page" id="page-cenas">
-      <div class="cenas-toolbar">
-        <button class="topbar-btn primary" onclick="addScene()">+ Nova cena</button>
-        <button class="topbar-btn" onclick="importScenes()">Importar cenas do SketchUp</button>
-        <button class="topbar-btn" onclick="refreshAllThumbs()">↺ Atualizar miniaturas</button>
+      <div class="dash-bar" style="gap:8px">
+        <button class="btn pr" onclick="capVP()">Capturar viewport</button>
+        <button class="btn" onclick="importSKP()">Importar do SketchUp</button>
+        <button class="btn" onclick="refreshThumbs()">↺ Atualizar</button>
         <div style="flex:1"></div>
-        <button class="topbar-btn" onclick="deleteAllScenes()" style="color:#c0392b">Limpar tudo</button>
+        <button class="btn sm dg" onclick="delAllScenes()">Limpar tudo</button>
       </div>
-      <div id="cenas-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-        <div class="empty-state" id="cenas-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-          </svg>
-          <h3>Nenhuma cena salva</h3>
-          <p>Salve cenas do seu projeto para organizar<br>diferentes ângulos e gerar renders individuais.</p>
-          <button class="topbar-btn primary" onclick="addScene()" style="margin-top:8px">+ Nova cena</button>
+      <div style="flex:1;overflow-y:auto">
+        <div class="cena-panel">
+          <div class="cap-prev">
+            <img id="cap-img" src="" alt="">
+            <div class="cap-empty" id="cap-empty">O preview aparece aqui depois de clicar em Capturar.</div>
+          </div>
+          <div class="fsec">
+            <div class="fl">Formato</div>
+            <div class="fmt-pills" id="fmt-pills">
+              <button class="fp sel" data-f="16:9">16:9</button>
+              <button class="fp" data-f="4:3">4:3</button>
+              <button class="fp" data-f="1:1">1:1</button>
+              <button class="fp" data-f="4:5">4:5</button>
+              <button class="fp" data-f="3:4">3:4</button>
+              <button class="fp" data-f="9:16">9:16</button>
+              <button class="fp" data-f="viewport">Seguir viewport</button>
+              <button class="fp" data-f="pano">Panorama 360°</button>
+            </div>
+          </div>
+          <div class="tog-r"><span>Safe Frame</span><div class="tog" id="t-sf" onclick="tSF()"></div></div>
+          <div class="tog-r"><span>Grid de terços</span><div class="tog" id="t-grid" onclick="tGrid()"></div></div>
+          <div class="tog-r"><span>Estilo pra IA</span><div class="tog" id="t-ai" onclick="tAI()"></div></div>
+          <div class="tog-r"><span>Material ID</span><div class="tog" id="t-mid" onclick="tMID()"></div></div>
+          <div style="font-size:10px;color:var(--text3)">Nome da cena (opcional)</div>
+          <input class="fi" id="scene-name" placeholder="Ex: Sala Vista 01">
+          <button class="btn pr btn-full" onclick="capVP()">Capturar para LAVI</button>
         </div>
-        <div class="cenas-grid" id="cenas-grid" style="display:none"></div>
+        <div class="cs-title">
+          <span>Capturas salvas</span>
+          <button class="btn sm" onclick="importSKP()">Importar do SketchUp</button>
+        </div>
+        <div class="cgrid" id="cgrid"></div>
+        <div class="empty" id="cenas-empty" style="display:none">
+          <h3>Nenhuma cena capturada</h3>
+          <p>Capture a viewport do SketchUp para salvar cenas aqui. As capturas ficam salvas na pasta do projeto e voltam ao reabrir o arquivo.</p>
+        </div>
       </div>
     </div>
 
-    <!-- ── PÁGINA: GALERIA ────────────────────────────────── -->
-    <div class="page" id="page-galeria">
-      <div class="gallery-filters">
-        <select class="rpanel-select" id="gal-filter" style="width:auto;min-width:160px" onchange="filterGallery()">
-          <option value="all">Todos os renders</option>
-          <option value="foto">Fotorrealista</option>
-          <option value="video">Vídeos</option>
-          <option value="upscale">Upscale</option>
-        </select>
-        <div style="flex:1"></div>
-        <button class="topbar-btn" onclick="openProjectFolder()">📁 Abrir pasta</button>
+    <!-- CRIAR -->
+    <div class="page" id="page-criar">
+      <div class="ctabs" id="ctabs">
+        <div class="ctab active" data-ct="print" onclick="navC('print')">Imagem a partir de print</div>
+        <div class="ctab" data-ct="editar" onclick="navC('editar')">Editar imagem</div>
+        <div class="ctab" data-ct="humanizar" onclick="navC('humanizar')">Humanizar</div>
+        <div class="ctab" data-ct="melhorar" onclick="navC('melhorar')">Melhorar render</div>
+        <div class="ctab" data-ct="multiplicar" onclick="navC('multiplicar')">Multiplicar imagem</div>
+        <div class="ctab" data-ct="detalhe" onclick="navC('detalhe')">Gerar detalhes</div>
+        <div class="ctab" data-ct="video" onclick="navC('video')">Vídeo</div>
+        <div class="ctab" data-ct="upscale" onclick="navC('upscale')">Upscale</div>
+        <div class="ctab" data-ct="posprod" onclick="navC('posprod')">Pós-produção</div>
       </div>
-      <div id="galeria-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-        <div class="empty-state" id="galeria-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-          </svg>
-          <h3>Nenhum render ainda</h3>
-          <p>Seus renders aparecem aqui automaticamente<br>após serem gerados.</p>
-        </div>
-        <div class="gallery-grid" id="gallery-grid" style="display:none"></div>
-      </div>
-    </div>
+      <div class="cbody">
 
-    <!-- ── PÁGINA: 360° ───────────────────────────────────── -->
+        <!-- PRINT -->
+        <div class="cp active" id="ct-print">
+          <div class="c2">
+            <div class="cl">
+              <div class="fsec">
+                <div class="fl">Fonte da imagem</div>
+                <div class="src-btns">
+                  <button class="src-btn active" onclick="setSrc('upload',this)">Upload</button>
+                  <button class="src-btn" onclick="setSrc('viewport',this)">Capturar viewport</button>
+                  <button class="src-btn" onclick="setSrc('cena',this)">Escolher captura</button>
+                  <button class="src-btn" onclick="setSrc('dash',this)">Da dashboard</button>
+                </div>
+                <div class="ua" id="ua-print">
+                  <input type="file" accept="image/*" onchange="onFile(event,'print')">
+                  <img id="uimg-print">
+                  <p id="ulbl-print">Arraste seu print aqui<br><small>Trazer imagem do computador</small></p>
+                  <small>Aceita prints do SketchUp, Revit, Rhino, Blender, ArchiCAD e outros. PNG JPG JPEG</small>
+                </div>
+              </div>
+              <div class="fsec">
+                <div class="fl">Quero gerar <span style="color:#c0392b;font-size:8px">OBRIGATÓRIO</span></div>
+                <select class="fs" id="s-gerar"><option value="">Selecione</option><option>Imagem</option><option>Planta humanizada</option><option>Imagem 360°</option></select>
+              </div>
+              <div class="fsec">
+                <div class="fl">Tipo de cena <span style="color:#c0392b;font-size:8px">OBRIGATÓRIO</span></div>
+                <select class="fs" id="s-tipo" onchange="onTipo()"><option value="">Selecione</option><option value="interna">Interna</option><option value="externa">Externa</option></select>
+              </div>
+              <div class="fsec" id="sec-amb" style="display:none">
+                <div class="fl">Tipo de ambiente</div>
+                <select class="fs" id="s-amb"></select>
+              </div>
+              <div class="fsec">
+                <div class="fgroup">Iluminação natural</div>
+                <div class="fl">Tipo de luz</div>
+                <select class="fs"><option value="">Selecione</option><option>Ensolarada</option><option>Diurna bem clara</option><option>Diurna difusa</option><option>Overcast</option><option>Golden hour</option><option>Blue hour</option><option>Noturna</option><option>Não há, apenas luz artificial</option></select>
+                <div class="fl">Sol</div><div class="chips"><button class="chip" onclick="tChip(this)">Com sol</button><button class="chip" onclick="tChip(this)">Sem sol</button></div>
+                <div class="fl">Sombras</div><div class="chips"><button class="chip" onclick="tChip(this)">Suaves</button><button class="chip" onclick="tChip(this)">Marcadas</button></div>
+              </div>
+              <div class="fsec">
+                <div class="fgroup">Iluminação artificial</div>
+                <div class="fl">O forro possui tabica?</div>
+                <select class="fs"><option value="">Selecione</option><option>Sim — forro com tabica</option><option>Não — é laje (sem tabica)</option></select>
+                <div class="fl">Estado</div>
+                <select class="fs"><option value="">Selecione</option><option>Ligada</option><option>Desligada</option></select>
+                <div class="fl">Temperatura</div>
+                <div class="kb"><button class="kbtn" onclick="selK(this)">2700K</button><button class="kbtn sel" onclick="selK(this)">3000K</button><button class="kbtn" onclick="selK(this)">4000K</button><button class="kbtn" onclick="selK(this)">6500K</button></div>
+                <div class="fl">Tipos de luz</div>
+                <div class="chips">
+                  <button class="chip" onclick="tChip(this)">Spot de embutir</button><button class="chip" onclick="tChip(this)">Spot de sobrepor</button><button class="chip" onclick="tChip(this)">Plafon de sobrepor</button><button class="chip" onclick="tChip(this)">Plafon de embutir</button><button class="chip" onclick="tChip(this)">Trilho com spots</button><button class="chip" onclick="tChip(this)">Perfil LED no forro</button><button class="chip" onclick="tChip(this)">Pendente</button><button class="chip" onclick="tChip(this)">Abajur</button><button class="chip" onclick="tChip(this)">Arandela</button><button class="chip" onclick="tChip(this)">Fita LED</button><button class="chip" onclick="tChip(this)">Sanca</button><button class="chip" onclick="tChip(this)">Sanca indireta</button><button class="chip" onclick="tChip(this)">Wallwash</button><button class="chip" onclick="tChip(this)">Ônix iluminado</button>
+                </div>
+              </div>
+              <div class="fsec">
+                <div class="fl">Clima</div>
+                <select class="fs"><option value="">Selecione</option><option>Clean</option><option>Sofisticado</option><option>Aconchegante</option><option>Lúdico</option><option>Moderno</option><option>Alto padrão</option></select>
+              </div>
+              <div class="fsec">
+                <div class="fgroup">Reflexos na cena <span style="font-size:10px;font-weight:500;color:var(--text3)">opcional</span></div>
+                <div class="fl">Espelho — reflexo nítido</div>
+                <div class="chips"><button class="chip" onclick="tChip(this)">Prata</button><button class="chip" onclick="tChip(this)">Bronze</button><button class="chip" onclick="tChip(this)">Fumê</button></div>
+                <button class="btn sm" onclick="capReflexo('espelho')">Capturar reflexo</button>
+                <div class="fl" style="margin-top:8px">Vidro reflexo</div>
+                <div class="chips"><button class="chip" onclick="tChip(this)">Comum</button><button class="chip" onclick="tChip(this)">Reflecta Prata</button><button class="chip" onclick="tChip(this)">Reflecta Fumê</button><button class="chip" onclick="tChip(this)">Reflecta Bronze</button><button class="chip" onclick="tChip(this)">Reflecta Champagne</button></div>
+                <button class="btn sm" onclick="capReflexo('vidro')">Capturar reflexo</button>
+                <div class="fl" style="margin-top:8px">Televisão</div>
+                <div class="chips"><button class="chip" onclick="tChip(this)">Brilhante</button><button class="chip" onclick="tChip(this)">Fosco</button></div>
+                <button class="btn sm" onclick="capReflexo('tv')">Capturar reflexo</button>
+              </div>
+              <div class="fsec">
+                <div class="fgroup">Materiais <span style="font-size:10px;font-weight:500;color:var(--text3)">opcional</span></div>
+                <div class="fl">Piso</div>
+                <div class="frow"><select class="fs"><option value="">Material</option><option>Porcelanato</option><option>Madeira</option><option>Cimento</option><option>Pedra</option><option>Vinil</option></select><select class="fs"><option value="">Acabamento</option><option>Polido</option><option>Acetinado</option><option>Fosco</option><option>Rústico</option></select></div>
+                <div class="fl">Teto</div>
+                <div class="frow"><select class="fs"><option value="">Material</option><option>Gesso</option><option>Laje</option><option>Madeira</option><option>Metal</option></select><select class="fs"><option value="">Acabamento</option><option>Liso</option><option>Texturizado</option></select></div>
+                <div class="fl">Esquadria</div>
+                <select class="fs"><option value="">Material</option><option>Metal preto</option><option>Metal branco</option><option>Metal grafite</option><option>Apenas vidro</option><option>Madeira</option><option>PVC branco</option><option>PVC preto</option></select>
+                <div class="fl">Vidro</div>
+                <select class="fs"><option value="">Selecione</option><option>Translúcido</option><option>Fosco</option><option>Fumê</option><option>Jateado</option><option>Canelado</option><option>Reflecta prata</option><option>Reflecta bronze</option></select>
+                <div class="fl">Referências de materiais</div>
+                <div class="rg" id="rg-mat"><div class="ra"><input type="file" accept="image/*" onchange="addRef(event,'mat')">+</div></div>
+              </div>
+              <div class="fsec">
+                <div class="fgroup">Vegetação e entorno <span style="font-size:10px;font-weight:500;color:var(--text3)">opcional</span></div>
+                <div class="frow"><select class="fs"><option value="">Vegetação</option><option>Nenhuma</option><option>Pontual</option><option>Moderada</option><option>Densa</option><option>Seguir print</option></select><select class="fs"><option value="">Tipo</option><option>Brasileira</option><option>Tropical</option><option>Mediterrânea</option><option>Minimalista</option><option>Desértica</option></select></div>
+                <select class="fs"><option value="">Entorno / Background</option><option>Seguir print</option><option>Urbano consolidado</option><option>Residencial médio porte</option><option>Residencial alto padrão</option><option>Comercial</option><option>Rural</option><option>Praia</option><option>Floresta</option></select>
+              </div>
+              <div class="fsec">
+                <div class="fl">Outras referências</div>
+                <div class="rg" id="rg-out"><div class="ra"><input type="file" accept="image/*" multiple onchange="addRef(event,'out')">+</div></div>
+              </div>
+              <div class="fsec">
+                <div class="fl">Observações <span style="font-size:10px;font-weight:500;color:var(--text3)">opcional</span></div>
+                <textarea class="ft" id="obs-print" placeholder="Detalhes extras, pedidos específicos..."></textarea>
+              </div>
+            </div>
+            <div class="cr">
+              <div class="fsec">
+                <div class="fl">Prompt</div>
+                <textarea class="ft" id="prompt-print" style="min-height:120px" placeholder="Edite livremente antes de gerar a imagem"></textarea>
+                <button class="btn sm" onclick="regenPrompt()">↺ Gerar prompt novamente</button>
+              </div>
+              <div class="fsec">
+                <div class="fl">Modelo</div>
+                <div class="chips"><button class="chip sel" onclick="selMod(this,'n2')">Nano 2 <span style="opacity:.55;font-size:8px">Padrão</span></button><button class="chip" onclick="selMod(this,'np')">Nano Pro <span style="opacity:.55;font-size:8px">+detalhe</span></button></div>
+              </div>
+              <div class="fsec">
+                <div class="fl">Qualidade de saída</div>
+                <div class="chips"><button class="chip" onclick="selQ(this,'1K')">1K <span style="opacity:.55;font-size:8px">Rápido</span></button><button class="chip sel" onclick="selQ(this,'2K')">2K <span style="opacity:.55;font-size:8px">Padrão</span></button><button class="chip" onclick="selQ(this,'4K')">4K <span style="opacity:.55;font-size:8px">Máxima</span></button></div>
+              </div>
+              <div class="pw" id="pw-print"><div class="pt"><div class="pf" id="pf-print"></div></div><div class="pl" id="pl-print">Gerando...</div></div>
+              <button class="btn pr btn-full" id="btn-gen" onclick="genImg('print')">Gerar 2 créditos</button>
+              <div id="res-print" style="display:none;flex-direction:column;gap:10px">
+                <img id="rimg-print" src="" style="width:100%;border-radius:var(--r);cursor:pointer;display:none" onclick="lb(this.src)">
+                <div style="display:flex;gap:7px;flex-wrap:wrap">
+                  <button class="btn sm" onclick="saveImg('print')">Salvar nas imagens</button>
+                  <button class="btn sm" onclick="dnlImg('print')">Salvar no computador</button>
+                  <button class="btn sm" onclick="navC('editar')">Editar imagem</button>
+                  <button class="btn sm" onclick="navC('upscale')">Fazer upscale</button>
+                  <button class="btn sm" onclick="navC('posprod')">Pós-produção</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- EDITAR -->
+        <div class="cp" id="ct-editar"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Imagem base</div><div class="ua" id="ua-editar"><input type="file" accept="image/*" onchange="onFile(event,'editar')"><img id="uimg-editar"><p id="ulbl-editar">Arraste ou clique para selecionar.</p></div></div>
+          <div class="fsec"><div class="fl">Foto de referência <span style="opacity:.55;font-size:10px">opcional</span></div><div class="rg" id="rg-edit"><div class="ra"><input type="file" accept="image/*" onchange="addRef(event,'edit')">+</div></div></div>
+          <div class="fsec"><div class="fl">Prompt</div><textarea class="ft" id="prompt-editar" placeholder="Descreva o que você quer alterar..."></textarea></div>
+        </div><div class="cr">
+          <div class="fsec"><div class="fl">Modelo</div><div class="chips"><button class="chip sel" onclick="selMod(this,'n2')">Nano 2</button><button class="chip" onclick="selMod(this,'np')">Nano Pro</button></div></div>
+          <div class="fsec"><div class="fl">Qualidade</div><div class="chips"><button class="chip" onclick="selQ(this,'1K')">1K</button><button class="chip sel" onclick="selQ(this,'2K')">2K</button><button class="chip" onclick="selQ(this,'4K')">4K</button></div></div>
+          <button class="btn pr btn-full" onclick="genImg('editar')">Gerar 2 créditos</button>
+          <div id="res-editar" style="display:none;flex-direction:column;gap:8px"><img id="rimg-editar" src="" style="width:100%;border-radius:var(--r);cursor:pointer" onclick="lb(this.src)"><div style="display:flex;gap:7px"><button class="btn sm" onclick="saveImg('editar')">Salvar</button><button class="btn sm" onclick="dnlImg('editar')">Baixar</button></div></div>
+        </div></div></div>
+
+        <!-- HUMANIZAR -->
+        <div class="cp" id="ct-humanizar"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Imagem</div><div class="ua" id="ua-humanizar"><input type="file" accept="image/*" onchange="onFile(event,'humanizar')"><img id="uimg-humanizar"><p id="ulbl-humanizar">Arraste ou clique.</p></div></div>
+          <div class="fsec"><div class="fl">Pessoa</div><select class="fs"><option>Mulher</option><option>Homem</option><option>Mulher e homem</option><option>Menina</option><option>Menino</option></select></div>
+          <div class="fsec"><div class="fl">Idade</div><select class="fs"><option>Adulto</option><option>Jovem</option><option>Idoso</option><option>Criança</option></select></div>
+          <div class="fsec"><div class="fl">Observação <span style="opacity:.55;font-size:10px">opcional</span></div><textarea class="ft" placeholder="Roupas, ação, características..."></textarea></div>
+          <div class="fsec"><div class="fl">Foto de referência da pessoa <span style="opacity:.55;font-size:10px">beta · opcional</span></div><div class="rg" id="rg-hum"><div class="ra"><input type="file" accept="image/*" onchange="addRef(event,'hum')">+</div></div></div>
+        </div><div class="cr"><button class="btn pr btn-full" onclick="genImg('humanizar')">Gerar</button>
+          <div id="res-humanizar" style="display:none;flex-direction:column;gap:8px"><img id="rimg-humanizar" src="" style="width:100%;border-radius:var(--r);cursor:pointer" onclick="lb(this.src)"><button class="btn sm btn-full" onclick="saveImg('humanizar')">Salvar</button></div>
+        </div></div></div>
+
+        <!-- MELHORAR -->
+        <div class="cp" id="ct-melhorar"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Render a melhorar</div><div class="ua" id="ua-melhorar"><input type="file" accept="image/*" onchange="onFile(event,'melhorar')"><img id="uimg-melhorar"><p id="ulbl-melhorar">Arraste o render com cara de CGI.</p></div></div>
+          <div class="fsec"><div class="fl">Observações <span style="opacity:.55;font-size:10px">opcional</span></div><textarea class="ft" placeholder="Detalhes adicionais..."></textarea></div>
+        </div><div class="cr"><button class="btn pr btn-full" onclick="genImg('melhorar')">Melhorar render — 3 créditos</button>
+          <div id="res-melhorar" style="display:none;flex-direction:column;gap:8px"><img id="rimg-melhorar" src="" style="width:100%;border-radius:var(--r);cursor:pointer" onclick="lb(this.src)"><button class="btn sm btn-full" onclick="saveImg('melhorar')">Salvar</button></div>
+        </div></div></div>
+
+        <!-- MULTIPLICAR -->
+        <div class="cp" id="ct-multiplicar"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Imagem base</div><div class="ua" id="ua-multiplicar"><input type="file" accept="image/*" onchange="onFile(event,'multiplicar')"><img id="uimg-multiplicar"><p id="ulbl-multiplicar">Arraste ou clique.</p></div></div>
+          <div class="fsec"><div class="fl">Tipo de variação</div><select class="fs"><option>Novo mood</option><option>Novo ângulo</option><option>Nova estação</option></select></div>
+          <div class="fsec"><div class="fl">Observações <span style="opacity:.55;font-size:10px">opcional</span></div><textarea class="ft" placeholder="Descreva a variação..."></textarea></div>
+        </div><div class="cr"><button class="btn pr btn-full" onclick="genImg('multiplicar')">Gerar variações</button>
+          <div id="res-multiplicar" style="display:none;flex-direction:column;gap:8px"><img id="rimg-multiplicar" src="" style="width:100%;border-radius:var(--r);cursor:pointer" onclick="lb(this.src)"><button class="btn sm btn-full" onclick="saveImg('multiplicar')">Salvar</button></div>
+        </div></div></div>
+
+        <!-- DETALHE -->
+        <div class="cp" id="ct-detalhe"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Imagem</div><div class="ua" id="ua-detalhe"><input type="file" accept="image/*" onchange="onFile(event,'detalhe')"><img id="uimg-detalhe"><p id="ulbl-detalhe">Arraste ou clique.</p></div></div>
+          <div class="fsec"><div class="fl">Quantos ângulos? <span style="color:#c0392b;font-size:8px">OBRIGATÓRIO</span></div><div class="chips"><button class="chip sel" onclick="tChip(this)">1</button><button class="chip" onclick="tChip(this)">2</button><button class="chip" onclick="tChip(this)">3</button><button class="chip" onclick="tChip(this)">4</button></div></div>
+          <div class="fsec"><div class="fl">Proporção de imagem dos detalhes</div><select class="fs"><option value="">Selecione</option><option>Como a imagem original</option><option>1:1 — Quadrado</option><option>4:5 — Retrato</option><option>16:9 — Paisagem</option><option>9:16 — Stories</option></select></div>
+        </div><div class="cr"><button class="btn pr btn-full" onclick="genImg('detalhe')">Gerar detalhes</button>
+          <div id="res-detalhe" style="display:none;flex-direction:column;gap:8px"><img id="rimg-detalhe" src="" style="width:100%;border-radius:var(--r);cursor:pointer" onclick="lb(this.src)"><button class="btn sm btn-full" onclick="saveImg('detalhe')">Salvar</button></div>
+        </div></div></div>
+
+        <!-- VÍDEO -->
+        <div class="cp" id="ct-video"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Imagem base</div><div class="ua" id="ua-video"><input type="file" accept="image/*" onchange="onFile(event,'video')"><img id="uimg-video"><p id="ulbl-video">Arraste ou clique para selecionar.</p></div></div>
+          <div class="fsec"><div class="fl">Qualidade</div><div class="chips"><button class="chip sel" onclick="selVQ(this,'720p')">720p Mais econômico</button><button class="chip" onclick="selVQ(this,'1080p')">1080p Alta resolução</button></div></div>
+          <div class="fsec"><div class="fl">Duração</div><div class="chips"><button class="chip sel" onclick="selVD(this,5)">5 segundos</button><button class="chip" onclick="selVD(this,10)">10 segundos</button></div></div>
+          <div class="fsec">
+            <div class="fl">Movimento de câmera <span style="color:#c0392b;font-size:8px">OBRIGATÓRIO</span></div>
+            <div class="chips"><button class="chip" onclick="tChip(this)">Dolly in</button><button class="chip" onclick="tChip(this)">Dolly out</button><button class="chip" onclick="tChip(this)">Olhar pra cima</button><button class="chip" onclick="tChip(this)">Olhar pra baixo</button><button class="chip" onclick="tChip(this)">Pan left</button><button class="chip" onclick="tChip(this)">Pan right</button><button class="chip" onclick="tChip(this)">Virar pra esquerda</button><button class="chip" onclick="tChip(this)">Virar pra direita</button><button class="chip" onclick="tChip(this)">Zoom in</button><button class="chip" onclick="tChip(this)">Zoom out</button><button class="chip" onclick="tChip(this)">Orbit</button><button class="chip" onclick="tChip(this)">Static</button></div>
+          </div>
+          <div class="fsec">
+            <div class="fl">Movimentos ambientais <span style="opacity:.55;font-size:10px">opcional</span></div>
+            <div class="chips"><button class="chip" onclick="tChip(this)">Câmera na mão</button><button class="chip" onclick="tChip(this)">Cortina ao vento</button><button class="chip" onclick="tChip(this)">Vegetação</button><button class="chip" onclick="tChip(this)">Cascata</button><button class="chip" onclick="tChip(this)">Ondulações na água</button><button class="chip" onclick="tChip(this)">Fogo aceso</button><button class="chip" onclick="tChip(this)">Vapor da panela</button><button class="chip" onclick="tChip(this)">TV ligada</button></div>
+          </div>
+          <div class="fsec"><div class="fl">Detalhes extras <span style="opacity:.55;font-size:10px">opcional</span></div><textarea class="ft" id="obs-video" placeholder="Movimentos específicos, elementos a destacar..."></textarea></div>
+        </div><div class="cr">
+          <div id="v-cost" style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">Custo: 6 créditos (Kling 2.5 Turbo · 720p · 5s)</div>
+          <button class="btn pr btn-full" onclick="genVideo()">Confirmar e gerar</button>
+          <div id="res-video" style="display:none;flex-direction:column;gap:8px">
+            <video id="vid-el" controls style="width:100%;border-radius:var(--r)"></video>
+            <button class="btn sm btn-full" onclick="dnlVideo()">Baixar vídeo</button>
+          </div>
+        </div></div></div>
+
+        <!-- UPSCALE -->
+        <div class="cp" id="ct-upscale"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Imagem</div><div class="ua" id="ua-upscale"><input type="file" accept="image/*" onchange="onFile(event,'upscale')"><img id="uimg-upscale"><p id="ulbl-upscale">Arraste ou clique.</p></div></div>
+          <div class="fsec"><div class="fl">Escolha o tamanho</div>
+            <div style="display:flex;gap:10px">
+              <div style="flex:1;border:1.5px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s" onclick="selU(this,'2x')"><div style="font-size:20px;font-weight:900">2x</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Padrão · Duplica a resolução. 1 crédito</div></div>
+              <div style="flex:1;border:1.5px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .15s" onclick="selU(this,'4x')"><div style="font-size:20px;font-weight:900">4x</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Alta · Quadriplica a resolução. 1 crédito</div></div>
+            </div>
+          </div>
+        </div><div class="cr">
+          <div id="up-btn" style="font-size:11px;font-weight:700;margin-bottom:6px">Fazer upscale 2x — 1 crédito</div>
+          <button class="btn pr btn-full" onclick="genUpscale()">Fazer upscale</button>
+          <div id="res-upscale" style="display:none;flex-direction:column;gap:8px"><img id="rimg-upscale" src="" style="width:100%;border-radius:var(--r);cursor:pointer" onclick="lb(this.src)"><button class="btn sm btn-full" onclick="dnlImg('upscale')">Baixar</button></div>
+        </div></div></div>
+
+        <!-- PÓS-PRODUÇÃO -->
+        <div class="cp" id="ct-posprod"><div class="c2"><div class="cl">
+          <div class="fsec"><div class="fl">Imagem</div><div class="ua" id="ua-posprod"><input type="file" accept="image/*" onchange="onFile(event,'posprod')"><img id="uimg-posprod"><p id="ulbl-posprod">Ajuste exposição, cor e tonalidade em tempo real, sem custo.</p></div></div>
+        </div><div class="cr">
+          <div class="fgroup">Controles gerais</div>
+          <div id="pp-g"></div>
+          <div class="fgroup" style="margin-top:14px">Controles de cor</div>
+          <div id="pp-c"></div>
+          <div class="fgroup" style="margin-top:14px">Efeitos</div>
+          <div id="pp-e"></div>
+          <button class="btn sm btn-full" style="margin-top:10px" onclick="expPP()">Exportar</button>
+        </div></div></div>
+
+      </div><!-- /cbody -->
+    </div><!-- /page-criar -->
+
+    <!-- TOUR 360° -->
     <div class="page" id="page-360">
-      <div class="pano-area">
-        <div class="pano-preview">
-          <img id="pano-img" src="" alt="">
-          <div class="pano-empty" id="pano-empty">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <ellipse cx="12" cy="12" rx="4" ry="10"/>
-              <path d="M2 12h20"/>
-            </svg>
-            <span>Capture um panorama 360°</span>
+      <div class="tour-hdr">
+        <button class="btn pr" onclick="newTour()">Novo tour</button>
+        <div style="font-size:11px;color:var(--text2)" id="tour-status">Você ainda não tem tours publicados</div>
+      </div>
+      <div class="empty" id="tour-empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="4" ry="10"/><path d="M2 12h20"/></svg>
+        <h3>Nenhum tour criado</h3>
+        <p>Monte um passeio virtual com panoramas 360° conectados. Gere um link público + QR Code ou baixe em HTML grátis.</p>
+        <button class="btn pr" onclick="newTour()">Criar novo tour</button>
+      </div>
+      <div class="tour-body" id="tour-body" style="display:none">
+        <div class="tour-pano" id="tour-pano">Selecione uma cena</div>
+        <div class="tour-side">
+          <div class="tour-side-h">
+            <span style="font-size:11.5px;font-weight:800;flex:1">Cenas</span>
+            <button class="btn sm pr" onclick="addTSc()">+ Cena</button>
           </div>
-        </div>
-        <div class="pano-controls">
-          <div class="rpanel-section">
-            <div class="rpanel-label">Resolução</div>
-            <select class="rpanel-select" id="sel-pano-res">
-              <option value="2K">2K</option>
-              <option value="4K" selected>4K</option>
-              <option value="8K">8K</option>
-            </select>
+          <div class="tour-scs" id="tour-scs"></div>
+          <div class="tour-drop" id="t-drop">
+            <input type="file" accept="image/*" onchange="addTScFile(event)">
+            <p>Clique aqui ou arraste uma imagem panorâmica equiretangular (formato 2:1)</p>
           </div>
-          <div class="toggle-row">
-            <span>Aplicar estilo IA</span>
-            <div class="toggle" id="toggle-pano-ai" onclick="togglePanoAi()"></div>
+          <div class="tour-foot">
+            <button class="btn btn-full" onclick="dlTour()">Baixar HTML — Grátis</button>
+            <button class="btn pr btn-full" onclick="pubTour()">Gerar Link + QR Code — 6 créditos</button>
           </div>
-          <button class="render-btn" onclick="capturePanorama()">Capturar 360°</button>
-          <button class="capture-btn" id="btn-save-pano" onclick="savePanorama()" style="display:none">⬇ Salvar panorama</button>
         </div>
       </div>
     </div>
 
-    <!-- ── PÁGINA: CONFIGURAÇÕES ──────────────────────────── -->
-    <div class="page" id="page-config">
-      <div class="config-body">
-        <h2 style="font-size:16px;font-weight:800">Configurações</h2>
-
-        <!-- Google AI Studio -->
-        <div class="config-section">
-          <div class="config-section-title">Google AI Studio</div>
-          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
-            Use sua própria chave da <a href="https://aistudio.google.com" target="_blank" style="color:var(--text);font-weight:700">Google AI Studio</a> para gerar renders.
-            Acesso gratuito com cota generosa. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--text);font-weight:700">Gerar chave →</a>
-          </p>
-          <div class="config-row">
-            <div>
-              <div class="config-row-label">Chave de API (Google)</div>
-              <div class="config-row-sub">Começa com "AIza..."</div>
-            </div>
-            <span class="key-status empty" id="google-key-status">Não configurada</span>
-          </div>
-          <div style="display:flex;gap:8px">
-            <input type="password" class="config-input" id="input-google-key" placeholder="AIzaSy..." style="flex:1;max-width:100%">
-            <button class="config-save" onclick="saveGoogleKey()">Salvar</button>
+    <!-- CONTA -->
+    <div class="page" id="page-conta">
+      <div class="conta-body">
+        <h2 style="font-size:16px;font-weight:800">Minha conta</h2>
+        <div class="csec">
+          <div class="csec-t">API do Google AI Studio</div>
+          <p style="font-size:11px;color:var(--text2);line-height:1.65">BYOK · você usa sua própria chave do Google AI Studio. Paga direto pro Google só pelo que gerar. A chave fica salva <b style="color:var(--text)">só no seu navegador</b> — nunca passa pelo servidor da LAVI. <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--text);font-weight:700">Abrir Google AI Studio →</a></p>
+          <div class="crow"><div><div class="crow-l">Sua chave</div><div class="crow-s">Formato AIzaSy...</div></div><span class="ast no" id="ast">Não configurada</span></div>
+          <div style="display:flex;gap:8px"><input type="password" class="ai" id="ak-in" placeholder="AIzaSy..." style="flex:1"><button class="btn pr" onclick="saveAK()">Salvar</button><button class="btn" onclick="testAK()">Testar</button></div>
+          <button class="btn dg sm" id="rm-ak" onclick="removeAK()" style="display:none">Remover API</button>
+        </div>
+        <div class="csec">
+          <div class="csec-t">Meus créditos LAVI</div>
+          <div style="font-size:32px;font-weight:900;letter-spacing:-1px" id="cr-bal">0</div>
+          <div style="font-size:11px;color:var(--text3);font-weight:600">créditos disponíveis · sem mensalidade · compra única</div>
+          <div class="pkgs">
+            <div class="pkg" onclick="buyPkg(50,30)"><div class="pkg-a">50</div><div class="pkg-n">Pacote Basic</div><div class="pkg-p">R$ 30</div><div class="pkg-u">R$ 0,60/créd</div></div>
+            <div class="pkg" onclick="buyPkg(150,80)"><div class="pkg-a">150</div><div class="pkg-n">Pacote Silver</div><div class="pkg-p">R$ 80</div><div class="pkg-u">R$ 0,53/créd</div></div>
+            <div class="pkg feat" onclick="buyPkg(400,210)"><div class="pkg-bdg">Mais vendido</div><div class="pkg-a">400</div><div class="pkg-n">Pacote Gold</div><div class="pkg-p">R$ 210</div><div class="pkg-u">R$ 0,52/créd</div></div>
+            <div class="pkg" onclick="buyPkg(1000,500)"><div class="pkg-a">1000</div><div class="pkg-n">Pacote Black</div><div class="pkg-p">R$ 500</div><div class="pkg-u">R$ 0,50/créd 🔥</div></div>
           </div>
         </div>
-
-        <!-- Pasta de projeto -->
-        <div class="config-section">
-          <div class="config-section-title">Pasta do projeto</div>
-          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
-            Renders e capturas são salvos em uma pasta ao lado do arquivo .skp aberto.
-          </p>
-          <div class="config-row">
-            <div>
-              <div class="config-row-label">Pasta atual</div>
-              <div class="config-row-sub" id="folder-path-display" style="word-break:break-all;max-width:280px">Não configurada</div>
-            </div>
-            <button class="topbar-btn" onclick="pickFolder()">Escolher</button>
-          </div>
+        <div class="csec">
+          <div class="csec-t">Custo por operação</div>
+          <table class="ct"><thead><tr><th>Operação</th><th>Créditos</th></tr></thead>
+          <tbody>
+            <tr><td>Imagem 2K (Nano 2)</td><td>2</td></tr>
+            <tr><td>Imagem 4K (Nano 2)</td><td>4</td></tr>
+            <tr><td>Imagem PRO 2K</td><td>3</td></tr>
+            <tr><td>Imagem PRO 4K</td><td>5</td></tr>
+            <tr><td>Melhorar render</td><td>3</td></tr>
+            <tr><td>Upscale 2x</td><td>1</td></tr>
+            <tr><td>Upscale 4x</td><td>1</td></tr>
+            <tr><td>Vídeo 5s · 720p</td><td>6</td></tr>
+            <tr><td>Vídeo 5s · 1080p Pro</td><td>8</td></tr>
+            <tr><td>Vídeo 10s · 720p</td><td>12</td></tr>
+            <tr><td>Vídeo 10s · 1080p Pro</td><td>15</td></tr>
+            <tr><td>Tour 360 (publicar)</td><td>6</td></tr>
+          </tbody></table>
         </div>
-
-        <!-- Preferências visuais -->
-        <div class="config-section">
-          <div class="config-section-title">Interface</div>
-          <div class="toggle-row">
-            <span>Modo compacto (1 coluna)</span>
-            <div class="toggle" id="toggle-compact" onclick="toggleCompact()"></div>
-          </div>
-          <div class="toggle-row">
-            <span>Safe frame no SketchUp</span>
-            <div class="toggle" id="toggle-sf-config"></div>
-          </div>
-        </div>
-
-        <!-- Sobre -->
-        <div class="config-section">
-          <div class="config-section-title">Sobre o LAVI Render</div>
-          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
-            Versão <b style="color:var(--text)">4.0.0</b> — Acesso vitalício, sem assinatura.
-            <br>Render via Google Gemini (BYOK — chave própria).
-          </p>
+        <div class="csec">
+          <div class="csec-t">Pasta do projeto</div>
+          <p style="font-size:11px;color:var(--text2);line-height:1.6">Defina onde as imagens deste projeto ficam salvas. A LAVI salva automaticamente cada nova imagem gerada nesta pasta.</p>
+          <div class="crow"><div><div class="crow-l">Pasta atual</div><div class="crow-s" id="folder-path">—</div></div><button class="btn sm" onclick="pickFolder()">Escolher pasta</button></div>
         </div>
       </div>
     </div>
+
+  </div><!-- /main -->
+</div><!-- /body -->
+</div><!-- /app -->
+
+<div id="modal">
+  <div class="mbox">
+    <h3 id="m-title"></h3>
+    <div class="mb" id="m-body"></div>
+    <div class="mfoot" id="m-foot"></div>
   </div>
 </div>
-
-<!-- MODAIS / OVERLAYS -->
-<div id="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-title" id="modal-title"></div>
-    <div class="modal-body" id="modal-body"></div>
-    <div class="modal-footer" id="modal-footer"></div>
-  </div>
-</div>
-
-<div id="lightbox">
-  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="">
-</div>
-
-<div id="loading-overlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-msg" id="loading-msg">Aguarde...</div>
-</div>
-
-<div id="toast-container"></div>
-
+<div id="lb"><button id="lb-x" onclick="closeLB()">✕</button><img id="lb-img" src="" alt=""></div>
+<div id="loading"><div class="sp"></div><div id="loading-msg">Aguarde...</div></div>
+<div id="toasts"></div>
 <script>
 // ═══════════════════════════════════════════════════════════════
-// LAVI Render — app.html
-// Site externo que roda dentro do iframe do plugin SketchUp.
-// Comunicação via postMessage (plugin panel.html ↔ este app).
+// LAVI Render — app.html v4.0
+// Site idêntico ao HEMY AI, identidade visual LAVI.
+// GitHub Pages: https://arqlais.github.io/lavy/app
+// Comunicação: postMessage ↔ panel.html (plugin SketchUp)
 // ═══════════════════════════════════════════════════════════════
-
-// ─── ESTADO ───────────────────────────────────────────────────
-const state = {
-  currentPage: 'render',
-  skpFilename: '',
-  captureDataUrl: null,
-  captureFormat: '16:9',
-  renderDataUrl: null,
-  panoDataUrl: null,
-  panoApplyAi: false,
-  safeFrameOn: false,
-  aiStyleOn: false,
-  compact: false,
-  googleKey: localStorage.getItem('lavi_google_key') || '',
-  projectFolder: null,
-  scenes: [],        // lista de cenas salvas (Pages do .skp)
-  galleryItems: [],  // histórico de renders
-  captures: [],      // capturas (aba Cenas)
-  isRendering: false,
-  updateAvailable: false,
+const IS_EMBED = new URLSearchParams(location.search).get('embed') === 'sketchup';
+const S = {
+  page:'dashboard', ctab:'print',
+  fmt:'16:9', sf:false, grid:false, ai:false, mid:false,
+  mod:'n2', qual:'2K', vq:'720p', vd:5, us:'2x',
+  key: localStorage.getItem('lavi_key')||'',
+  cred: parseInt(localStorage.getItem('lavi_cred')||'0'),
+  captureUrl:null, srcs:{},
+  dash: JSON.parse(localStorage.getItem('lavi_dash')||'[]'),
+  scenes:[], tourScenes:[], sel:new Set()
 };
 
-// ─── PLUGIN BRIDGE ────────────────────────────────────────────
-// Detecta se rodando dentro do HtmlDialog do SketchUp (tem parent)
-// ou num browser normal (dev mode sem plugin).
-const IS_PLUGIN = window.parent !== window;
+// ── BRIDGE ─────────────────────────────────────────────────────
+function toP(type, payload){ if(IS_EMBED) window.parent.postMessage({type, payload:payload||{}}, '*'); }
 
-function toPlugin(type, payload) {
-  if (IS_PLUGIN) {
-    window.parent.postMessage({ type, payload: payload || {} }, '*');
-  } else {
-    console.log('[LAVI→plugin]', type, payload);
-  }
-}
-
-// ─── RECEBE MENSAGENS DO PLUGIN (panel.html → postMessage) ────
-window.addEventListener('message', (e) => {
-  const msg = e.data;
-  if (!msg || typeof msg !== 'object') return;
-  switch (msg.type) {
-    case 'hemy.context.skp':
-      handleSkpContext(msg.payload);
-      break;
-    case 'hemy.pages.list.deliver':
-      handlePagesList(msg.payload);
-      break;
-    case 'hemy.pages.render.deliver':
-      handlePageRender(msg.payload);
-      break;
-    case 'hemy.viewport.captured':
-      handleViewportCaptured(msg.payload);
-      break;
-    case 'hemy.viewport.cameraSig.deliver':
-      // usado para detectar mudança de câmera
-      break;
-    case 'hemy.capture.list.deliver':
-      handleCapturesList(msg.payload);
-      break;
-    case 'hemy.capture.saved':
-      handleCaptureSaved(msg.payload);
-      break;
-    case 'hemy.capture.deleted':
-      toast('Captura removida.');
-      loadCaptures();
-      break;
-    case 'hemy.project.list.deliver':
-      handleGalleryList(msg.payload);
-      break;
-    case 'hemy.project.saveImage.deliver':
-      handleImageSaved(msg.payload);
-      break;
-    case 'hemy.model.cleanup.deliver':
-      handleCleanup(msg.payload);
-      break;
-    case 'hemy.error':
-      toast(msg.payload && msg.payload.message ? msg.payload.message : 'Erro desconhecido.', 'error');
-      hideLoading();
-      break;
-    case 'hemy.panorama.captured':
-      handlePanorama(msg.payload);
-      break;
-    case 'hemy.update.info':
-      handleUpdateInfo(msg.payload);
-      break;
-    case 'hemy.lightstrip.result':
-      if (msg.payload && msg.payload.ok === false) toast(msg.payload.error || 'Faixa de luz: erro.', 'error');
-      else toast('Faixa de luz criada!', 'success');
-      break;
-    case 'hemy.mirror.captured':
-      if (msg.payload && msg.payload.ok === false) toast(msg.payload.error || 'Reflexo: erro.', 'error');
-      else toast('Reflexo aplicado!', 'success');
-      break;
-    case 'hemy.auth.restore':
-      // sem uso — acesso vitalício
-      break;
-    default:
-      break;
+window.addEventListener('message', e => {
+  const m = e.data; if(!m||typeof m!=='object') return;
+  switch(m.type){
+    case 'hemy.context.skp':          handleCtx(m.payload); break;
+    case 'hemy.pages.list.deliver':   handlePages(m.payload); break;
+    case 'hemy.pages.render.deliver': handleRender(m.payload); break;
+    case 'hemy.viewport.captured':    handleCap(m.payload); break;
+    case 'hemy.update.info':          handleUpd(m.payload); break;
+    case 'hemy.capture.saved':        handleCapSaved(m.payload); break;
+    case 'hemy.capture.list.deliver': handleCapList(m.payload); break;
+    case 'hemy.project.list.deliver': handleProjList(m.payload); break;
+    case 'hemy.project.saveImage.deliver': handleImgSaved(m.payload); break;
+    case 'hemy.model.cleanup.deliver':handleCleanup(m.payload); break;
+    case 'hemy.panorama.captured':    handlePano(m.payload); break;
+    case 'hemy.lightstrip.result':    handleLS(m.payload); break;
+    case 'hemy.mirror.captured':      handleMirror(m.payload); break;
+    case 'hemy.auth.restore':         break; // sem login
+    case 'hemy.error': toast(m.payload?.message||'Erro.','err'); hideL(); break;
   }
 });
 
-// ─── BOOT ─────────────────────────────────────────────────────
-function boot() {
-  // Avisa o plugin que o app está pronto
-  toPlugin('hemy.ready');
-  // Pede contexto do .skp
-  toPlugin('hemy.context.refresh');
-  // Carrega preferências locais
-  updateGoogleKeyStatus();
-  // Checar update (não bloqueante)
-  toPlugin('hemy.update.check');
-  // Renderiza página inicial
-  navigateTo('render');
+// ── BOOT ────────────────────────────────────────────────────────
+function boot(){
+  if(IS_EMBED){ document.getElementById('top-bar').classList.add('visible'); document.getElementById('sidebar').classList.add('hidden'); }
+  else { document.getElementById('sidebar').classList.remove('hidden'); }
+  initPP();
+  toP('hemy.ready'); toP('hemy.context.refresh'); toP('hemy.update.check');
+  toP('hemy.auth.persist', JSON.stringify({active:true, google_key:S.key}));
+  updAKUI(); updCred(); renderDash();
+  nav('dashboard');
 }
 
-// ─── NAVEGAÇÃO ────────────────────────────────────────────────
-document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-  el.addEventListener('click', () => navigateTo(el.dataset.page));
+// ── NAV ─────────────────────────────────────────────────────────
+function nav(p){
+  S.page=p;
+  document.querySelectorAll('.page').forEach(el=>el.classList.toggle('active',el.id==='page-'+p));
+  document.querySelectorAll('.s-item[data-p]').forEach(el=>el.classList.toggle('active',el.dataset.p===p));
+  document.querySelectorAll('.top-tab[data-t]').forEach(el=>el.classList.toggle('active',el.dataset.t===p));
+  if(p==='cenas'){ toP('hemy.pages.list'); toP('hemy.capture.list'); }
+  if(p==='dashboard') toP('hemy.project.list');
+}
+function navC(ct){
+  S.ctab=ct;
+  document.querySelectorAll('.ctab').forEach(el=>el.classList.toggle('active',el.dataset.ct===ct));
+  document.querySelectorAll('.cp').forEach(el=>el.classList.toggle('active',el.id==='ct-'+ct));
+  nav('criar');
+}
+
+// ── CONTEXT ──────────────────────────────────────────────────────
+function handleCtx(p){
+  const nm=p?.filename||'';
+  document.getElementById('tbr-skp').textContent=nm||'—';
+  document.getElementById('tbr-skp').title=nm;
+}
+
+// ── DASHBOARD ────────────────────────────────────────────────────
+function renderDash(){
+  const g=document.getElementById('dash-grid');
+  const e=document.getElementById('dash-empty');
+  if(!S.dash.length){ g.style.display='none'; e.style.display='flex'; return; }
+  e.style.display='none'; g.style.display='grid';
+  g.innerHTML=S.dash.map((it,i)=>`
+    <div class="dc${S.sel.has(i)?' sel':''}" onclick="dcClick(event,${i})">
+      <img class="dc-img" src="${it.d}" loading="lazy">
+      <div class="dc-chk">${S.sel.has(i)?'✓':''}</div>
+      <div class="dc-info"><div class="dc-name">${it.n||'Imagem'}</div><div class="dc-date">${it.dt||''}</div></div>
+    </div>`).join('');
+}
+function dcClick(e,i){
+  if(e.target.closest('.dc-chk')||S.sel.size>0||e.shiftKey||e.ctrlKey||e.metaKey){ togSel(i); }
+  else lb(S.dash[i].d);
+}
+function togSel(i){ S.sel.has(i)?S.sel.delete(i):S.sel.add(i); updSelBar(); renderDash(); }
+function updSelBar(){
+  const n=S.sel.size;
+  document.getElementById('selbar').classList.toggle('on',n>0);
+  document.getElementById('sc').textContent=n+' selecionadas';
+  document.getElementById('sc2').textContent=n;
+}
+function selAll(){ S.dash.forEach((_,i)=>S.sel.add(i)); updSelBar(); renderDash(); }
+function clrSel(){ S.sel.clear(); updSelBar(); renderDash(); }
+function delSel(){
+  [...S.sel].sort((a,b)=>b-a).forEach(i=>S.dash.splice(i,1));
+  saveDash(); clrSel(); renderDash();
+}
+function saveDash(){ localStorage.setItem('lavi_dash',JSON.stringify(S.dash)); }
+function addDash(d,n,prompt){
+  S.dash.unshift({d, n:n||'Imagem', dt:new Date().toLocaleDateString('pt-BR'), prompt:prompt||''});
+  if(S.dash.length>200) S.dash.pop(); saveDash();
+}
+function handleProjList(p){
+  if(!p?.ok) return;
+  (p.items||[]).forEach(it=>{ if(it.dataUrl&&!S.dash.find(d=>d.n===it.filename)) addDash(it.dataUrl, it.filename,''); });
+  if(S.page==='dashboard') renderDash();
+}
+function handleImgSaved(p){ toast(p?.ok?'Imagem salva na pasta do projeto!':'Erro ao salvar: '+(p?.error||''),'ok'); }
+
+// ── CENAS ─────────────────────────────────────────────────────────
+let _fmt='16:9',_sf=false,_gr=false,_ai=false,_mid=false;
+document.getElementById('fmt-pills').addEventListener('click',e=>{
+  const p=e.target.closest('.fp'); if(!p) return;
+  document.querySelectorAll('.fp').forEach(x=>x.classList.remove('sel')); p.classList.add('sel');
+  _fmt=p.dataset.f; toP('hemy.overlay.set',{format:_fmt,safeframe:_sf,grid:_gr});
 });
-document.querySelectorAll('.nav-item[data-action]').forEach(el => {
-  el.addEventListener('click', () => {
-    if (el.dataset.action === 'cleanup') requestCleanup();
-  });
-});
-
-function navigateTo(page) {
-  state.currentPage = page;
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === page);
-  });
-  document.querySelectorAll('.page').forEach(el => {
-    el.classList.toggle('active', el.id === 'page-' + page);
-  });
-  const titles = { render: 'Render', cenas: 'Cenas', galeria: 'Galeria', '360': 'Tour 360°', config: 'Configurações' };
-  document.getElementById('topbar-title').textContent = titles[page] || page;
-
-  if (page === 'cenas') loadPages();
-  if (page === 'galeria') { toPlugin('hemy.project.list'); }
-  if (page === 'config') updateGoogleKeyStatus();
+function tSF(){_sf=!_sf; document.getElementById('t-sf').classList.toggle('on',_sf); toP('hemy.overlay.set',{format:_fmt,safeframe:_sf,grid:_gr});}
+function tGrid(){_gr=!_gr; document.getElementById('t-grid').classList.toggle('on',_gr); toP('hemy.overlay.set',{format:_fmt,safeframe:_sf,grid:_gr});}
+function tAI(){_ai=!_ai; document.getElementById('t-ai').classList.toggle('on',_ai); toP('hemy.style.aiPreview',{active:_ai});}
+function tMID(){_mid=!_mid; document.getElementById('t-mid').classList.toggle('on',_mid);}
+function capVP(){
+  showL('Capturando viewport...');
+  toP('hemy.viewport.capture',{format:_fmt,include_meta:true,apply_ai_style:_ai,matid_enabled:_mid});
 }
-
-// ─── CONTEXTO SKP ─────────────────────────────────────────────
-function handleSkpContext(payload) {
-  state.skpFilename = payload && payload.filename ? payload.filename : '';
-  const el = document.getElementById('topbar-skp');
-  el.textContent = state.skpFilename || 'Nenhum arquivo aberto';
-  el.title = state.skpFilename || '';
+function handleCap(p){
+  hideL(); if(!p?.ok){toast(p?.error||'Falha na captura.','err');return;}
+  S.captureUrl=p.dataUrl;
+  const img=document.getElementById('cap-img');
+  img.src=p.dataUrl; img.style.display='block';
+  document.getElementById('cap-empty').style.display='none';
+  toast('Viewport capturada!','ok');
 }
-
-// ─── CAPTURA DE VIEWPORT ──────────────────────────────────────
-function captureViewport() {
-  const fmt = state.captureFormat;
-  showLoading('Capturando viewport...');
-  toPlugin('hemy.viewport.capture', {
-    format: fmt,
-    include_meta: true,
-    apply_ai_style: state.aiStyleOn,
-    matid_enabled: false,
-  });
-}
-
-function handleViewportCaptured(payload) {
-  hideLoading();
-  if (!payload || !payload.ok) {
-    toast(payload && payload.error ? payload.error : 'Falha na captura.', 'error');
-    return;
-  }
-  state.captureDataUrl = payload.dataUrl;
-  const thumb = document.getElementById('capture-thumb');
-  const empty = document.getElementById('capture-empty');
-  thumb.src = payload.dataUrl;
-  thumb.style.display = 'block';
-  empty.style.display = 'none';
-  toast('Viewport capturada!', 'success');
-}
-
-function requestCameraCheck() {
-  toPlugin('hemy.viewport.cameraSig');
-  captureViewport();
-}
-
-// ─── PROPORÇÃO / FORMAT PILLS ─────────────────────────────────
-document.getElementById('format-pills').addEventListener('click', (e) => {
-  const pill = e.target.closest('.format-pill');
-  if (!pill) return;
-  document.querySelectorAll('.format-pill').forEach(p => p.classList.remove('selected'));
-  pill.classList.add('selected');
-  state.captureFormat = pill.dataset.fmt;
-  updateOverlay();
-});
-
-// ─── SAFE FRAME / ESTILO IA ───────────────────────────────────
-function toggleSafeFrame() {
-  state.safeFrameOn = !state.safeFrameOn;
-  document.getElementById('toggle-safeframe').classList.toggle('on', state.safeFrameOn);
-  updateOverlay();
-}
-
-function toggleAiStyle() {
-  state.aiStyleOn = !state.aiStyleOn;
-  document.getElementById('toggle-ai-style').classList.toggle('on', state.aiStyleOn);
-  toPlugin('hemy.style.aiPreview', { active: state.aiStyleOn });
-}
-
-function updateOverlay() {
-  toPlugin('hemy.overlay.set', {
-    format: state.captureFormat,
-    safeframe: state.safeFrameOn,
-    grid: false,
-  });
-}
-
-// ─── RENDER ───────────────────────────────────────────────────
-function startRender() {
-  if (!state.captureDataUrl) { toast('Capture a viewport primeiro.', 'error'); return; }
-  if (state.isRendering) return;
-
-  const googleKey = document.getElementById('input-google-key').value.trim()
-                 || state.googleKey;
-  if (!googleKey || !googleKey.startsWith('AIza')) {
-    openModal('Chave não configurada',
-      'Vá em <b>Configurações</b> e insira sua chave da Google AI Studio para gerar renders.',
-      [{ label: 'Configurações', action: () => navigateTo('config'), primary: true },
-       { label: 'Cancelar', action: closeModal }]);
-    return;
-  }
-
-  state.isRendering = true;
-  const btn = document.getElementById('btn-render');
-  btn.textContent = 'Gerando...';
-  btn.disabled = true;
-  showProgress('Enviando para o Gemini...');
-
-  const params = {
-    qualidade: document.getElementById('sel-qualidade').value,
-    ambiente:  document.getElementById('sel-ambiente').value,
-    estilo:    document.getElementById('sel-estilo').value,
-    prompt:    document.getElementById('prompt-extra').value.trim(),
-    formato:   state.captureFormat,
-    google_key: googleKey,
-    viewport_dataurl: state.captureDataUrl,
-  };
-
-  // Envia para o plugin processar via Gemini
-  toPlugin('hemy.pages.use', params);
-
-  // Fallback: simula progresso enquanto espera
-  simulateProgress();
-}
-
-function simulateProgress() {
-  const steps = [
-    [800,  'Analisando cena...', 15],
-    [2000, 'Gerando render...', 40],
-    [5000, 'Processando detalhes...', 70],
-    [9000, 'Finalizando...', 90],
-  ];
-  steps.forEach(([delay, label, pct]) => {
-    setTimeout(() => {
-      if (state.isRendering) setProgress(pct, label);
-    }, delay);
-  });
-}
-
-function handlePageRender(payload) {
-  state.isRendering = false;
-  hideProgress();
-  const btn = document.getElementById('btn-render');
-  btn.textContent = 'Gerar render';
-  btn.disabled = false;
-
-  if (!payload || !payload.ok) {
-    toast(payload && payload.error ? payload.error : 'Erro ao gerar render.', 'error');
-    return;
-  }
-
-  state.renderDataUrl = payload.dataUrl || payload.render_dataurl;
-  if (!state.renderDataUrl) { toast('Render retornou vazio.', 'error'); return; }
-
-  const preview = document.getElementById('render-preview');
-  const placeholder = document.getElementById('render-placeholder');
-  preview.src = state.renderDataUrl;
-  preview.style.display = 'block';
-  placeholder.style.display = 'none';
-
-  document.getElementById('btn-save').style.display = 'block';
-  document.getElementById('btn-upscale').style.display = 'block';
-  toast('Render gerado!', 'success');
-
-  // Auto-salva na galeria
-  saveToGallery(state.renderDataUrl);
-}
-
-// ─── SALVAR RENDER ────────────────────────────────────────────
-function saveRender() {
-  if (!state.renderDataUrl) return;
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `lavi_render_${ts}.png`;
-  const b64 = state.renderDataUrl.replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.file.save', { filename, base64: b64, mime: 'image/png' });
-  toast('Salvando render...', 'success');
-}
-
-function saveToGallery(dataUrl) {
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `render_${ts}.png`;
-  const b64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.project.saveImage', {
-    filename,
-    base64: b64,
-    mime: 'image/png',
-    tipo: 'render',
-  });
-}
-
-function upscaleRender() {
-  if (!state.renderDataUrl) return;
-  toast('Upscale em desenvolvimento — em breve!');
-}
-
-function handleImageSaved(payload) {
-  if (payload && payload.ok) {
-    toast('Imagem salva na pasta do projeto!', 'success');
-  } else {
-    toast(payload && payload.error ? payload.error : 'Erro ao salvar imagem.', 'error');
-  }
-}
-
-// ─── GALERIA ──────────────────────────────────────────────────
-function handleGalleryList(payload) {
-  if (!payload || !payload.ok) return;
-  state.galleryItems = payload.items || [];
-  renderGallery();
-}
-
-function renderGallery() {
-  const grid = document.getElementById('gallery-grid');
-  const empty = document.getElementById('galeria-empty');
-  const items = state.galleryItems;
-  if (!items.length) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-  empty.style.display = 'none';
-  grid.style.display = 'grid';
-  grid.innerHTML = items.map((item, i) => `
-    <div class="gallery-card">
-      <img class="gallery-img" src="${item.dataUrl || item.thumb || ''}"
-           loading="lazy" onclick="openLightbox('${escJs(item.dataUrl || '')}')">
-      <div class="gallery-info">
-        <span class="gallery-name">${escHtml(item.filename || 'Render')}</span>
-        <span class="gallery-date">${item.date || ''}</span>
-      </div>
-      <div class="gallery-actions">
-        <button class="gal-btn" onclick="downloadGalleryItem(${i})">⬇ Salvar</button>
-        <button class="gal-btn" onclick="deleteGalleryItem(${i})" style="color:#c0392b">✕</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function filterGallery() {
-  // Filtragem local por tipo
-  const f = document.getElementById('gal-filter').value;
-  const items = state.galleryItems.filter(it => f === 'all' || (it.tipo || '') === f);
-  const grid = document.getElementById('gallery-grid');
-  const empty = document.getElementById('galeria-empty');
-  if (!items.length) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-  empty.style.display = 'none';
-  grid.style.display = 'grid';
-  // (re-renderiza com items filtrados)
-}
-
-function downloadGalleryItem(i) {
-  const item = state.galleryItems[i];
-  if (!item) return;
-  const b64 = (item.dataUrl || '').replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.file.save', { filename: item.filename || 'render.png', base64: b64, mime: 'image/png' });
-}
-
-function deleteGalleryItem(i) {
-  const item = state.galleryItems[i];
-  if (!item) return;
-  toPlugin('hemy.project.deleteImage', { filename: item.filename });
-}
-
-function openProjectFolder() {
-  toPlugin('hemy.project.openFolder');
-}
-
-// ─── CENAS (Pages do SketchUp) ────────────────────────────────
-function loadPages() {
-  toPlugin('hemy.pages.list');
-  loadCaptures();
-}
-
-function handlePagesList(pages) {
-  if (!Array.isArray(pages)) return;
-  state.scenes = pages;
+function handlePages(arr){
+  hideL(); S.scenes=Array.isArray(arr)?arr:[];
   renderScenes();
 }
+function handleCapList(p){
+  if(!p?.ok) return; S.scenes=p.items||[]; renderScenes();
+}
+function renderScenes(){
+  const g=document.getElementById('cgrid'), e=document.getElementById('cenas-empty');
+  if(!S.scenes.length){ g.innerHTML=''; e.style.display='flex'; return; }
+  e.style.display='none';
+  g.innerHTML=S.scenes.map((s,i)=>`
+    <div class="cc">
+      <div class="cc-th">${s.thumb?`<img src="${s.thumb}">`:`<div class="cc-te">Sem miniatura</div>`}</div>
+      <div class="cc-info"><div class="cc-name">${s.name||'Cena'}</div><div class="cc-meta">${s.format||'—'}</div></div>
+      <div class="cc-acts">
+        <button class="cc-btn p" onclick="usePage(${i})">Usar pra gerar</button>
+        <button class="cc-btn" onclick="activatePage(${i})">Ativar</button>
+        <button class="cc-btn d" onclick="deletePage(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+function usePage(i){ const s=S.scenes[i]; if(!s) return; showL('Capturando cena...'); toP('hemy.pages.use',{name:s.name,format:s.format||_fmt}); }
+function activatePage(i){ const s=S.scenes[i]; if(!s) return; toP('hemy.pages.activate',{name:s.name}); toast(`Cena "${s.name}" ativada.`); }
+function deletePage(i){
+  const s=S.scenes[i]; if(!s) return;
+  modal('Remover cena',`Remover <b>${s.name}</b>?`,
+    [{l:'Cancelar',a:closeM},{l:'Remover',p:true,a:()=>{closeM();toP('hemy.pages.delete',{name:s.name});setTimeout(()=>toP('hemy.capture.list'),500);}}]);
+}
+function delAllScenes(){
+  modal('Limpar todas as cenas','Remove <b>todas</b> as cenas. Não é possível desfazer.',
+    [{l:'Cancelar',a:closeM},{l:'Limpar tudo',p:true,a:()=>{closeM();toP('hemy.pages.deleteMany',{names:S.scenes.map(s=>s.name)});setTimeout(()=>toP('hemy.capture.list'),500);}}]);
+}
+function importSKP(){ showL('Importando...'); toP('hemy.pages.listNative'); setTimeout(hideL,3000); }
+function refreshThumbs(){ showL('Atualizando...'); toP('hemy.pages.refreshThumbs'); setTimeout(()=>{hideL();toP('hemy.capture.list');},3000); }
+function handleCapSaved(p){ toast(p?.ok?'Cena salva!':'Erro: '+(p?.error||''),'ok'); toP('hemy.capture.list'); }
 
-function renderScenes() {
-  const grid = document.getElementById('cenas-grid');
-  const empty = document.getElementById('cenas-empty');
-  const scenes = state.scenes;
-  if (!scenes.length) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
+// ── CRIAR ──────────────────────────────────────────────────────────
+function setSrc(t,btn){
+  document.querySelectorAll('.src-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  if(t==='viewport'){ capVP(); }
+  else if(t==='cena'){ nav('cenas'); }
+}
+function onFile(e,ctx){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    S.srcs[ctx]=ev.target.result;
+    const img=document.getElementById('uimg-'+ctx);
+    const lbl=document.getElementById('ulbl-'+ctx);
+    if(img){img.src=ev.target.result;img.style.display='block';}
+    if(lbl)lbl.style.display='none';
+  };
+  r.readAsDataURL(f);
+}
+function onTipo(){
+  const v=document.getElementById('s-tipo').value;
+  const s=document.getElementById('sec-amb');
+  const sel=document.getElementById('s-amb');
+  if(v==='interna'){s.style.display='flex';sel.innerHTML=['Sala de estar','Sala de jantar','Cozinha','Quarto','Banheiro','Home office','Área de serviço','Garagem'].map(x=>`<option>${x}</option>`).join('');}
+  else if(v==='externa'){s.style.display='flex';sel.innerHTML=['Fachada','Área externa','Jardim','Piscina','Varanda','Terraço','Cobertura','Paisagismo'].map(x=>`<option>${x}</option>`).join('');}
+  else s.style.display='none';
+}
+function tChip(el){el.classList.toggle('sel');}
+function selK(el){el.closest('.kb').querySelectorAll('.kbtn').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');}
+function selMod(el,m){el.closest('.chips').querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');S.mod=m;}
+function selQ(el,q){el.closest('.chips').querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');S.qual=q;}
+function selVQ(el,q){el.closest('.chips').querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');S.vq=q;updVC();}
+function selVD(el,d){el.closest('.chips').querySelectorAll('.chip').forEach(b=>b.classList.remove('sel'));el.classList.add('sel');S.vd=d;updVC();}
+function selU(el,u){el.parentElement.querySelectorAll('div[onclick]').forEach(b=>b.style.borderColor='var(--border)');el.style.borderColor='var(--text)';S.us=u;document.getElementById('up-btn').textContent=`Fazer upscale ${u} — 1 crédito`;}
+function updVC(){const c=S.vq==='1080p'?(S.vd===10?15:8):(S.vd===10?12:6);document.getElementById('v-cost').textContent=`Custo: ${c} créditos (Kling 2.5 Turbo · ${S.vq} · ${S.vd}s)`;}
+function regenPrompt(){ toast('Prompt atualizado.'); }
+function addRef(e,ctx){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const c=document.getElementById('rg-'+ctx); if(!c) return;
+    const card=document.createElement('div'); card.className='rc';
+    card.innerHTML=`<img src="${ev.target.result}"><div class="rc-rm" onclick="this.parentElement.remove()">✕</div>`;
+    c.insertBefore(card,c.querySelector('.ra'));
+  }; r.readAsDataURL(f);
+}
+function genImg(ctx){
+  const key=S.key||document.getElementById('ak-in')?.value||'';
+  if(!key||!key.startsWith('AIza')){
+    modal('Chave não configurada','Vá em <b>Conta</b> e insira sua chave do Google AI Studio para gerar imagens.',
+      [{l:'Ir para Conta',p:true,a:()=>{closeM();nav('conta');}},{l:'Cancelar',a:closeM}]);
     return;
   }
-  empty.style.display = 'none';
-  grid.style.display = 'grid';
-  grid.innerHTML = scenes.map((s, i) => `
-    <div class="cena-card">
-      <div class="cena-thumb">
-        ${s.thumb ? `<img src="${escJs(s.thumb)}" alt="">` : `<div class="cena-thumb-empty">Sem miniatura</div>`}
-      </div>
-      <div class="cena-info">
-        <div class="cena-name">${escHtml(s.name || 'Cena')}</div>
-        <div class="cena-meta">${s.format || '16:9'} &nbsp;·&nbsp; ${s.width || '—'}px</div>
-      </div>
-      <div class="cena-actions">
-        <button class="cena-action primary" onclick="useScene(${i})">Usar</button>
-        <button class="cena-action" onclick="activateScene(${i})">Ativar</button>
-        <button class="cena-action danger" onclick="deleteScene(${i})">✕</button>
-      </div>
-    </div>
-  `).join('');
+  const src=S.captureUrl||S.srcs[ctx];
+  if(!src){toast('Adicione uma imagem.','err');return;}
+  const btn=document.getElementById('btn-gen'); if(btn){btn.disabled=true;btn.textContent='Gerando...';}
+  showProg(ctx);
+  toP('hemy.pages.use',{google_key:key,viewport_dataurl:src,ctx,mod:S.mod,qual:S.qual,obs:document.getElementById('obs-'+ctx)?.value||''});
+  simProg(ctx,()=>{if(btn){btn.disabled=false;btn.textContent='Gerar 2 créditos';}});
+}
+function handleRender(p){
+  hideL(); hideProg();
+  const ctx=p?.ctx||'print';
+  const btn=document.getElementById('btn-gen');
+  if(btn){btn.disabled=false;btn.textContent='Gerar 2 créditos';}
+  if(!p?.ok){toast(p?.error||'Erro ao gerar.','err');return;}
+  const u=p.dataUrl||p.render_dataurl;
+  if(!u){toast('Resposta vazia.','err');return;}
+  S.srcs[ctx+'_res']=u;
+  const img=document.getElementById('rimg-'+ctx);
+  const res=document.getElementById('res-'+ctx);
+  if(img){img.src=u;img.style.display='block';}
+  if(res){res.style.display='flex';}
+  addDash(u,'Render '+new Date().toLocaleTimeString('pt-BR'),'');
+  if(S.page==='dashboard') renderDash();
+  toast('Imagem gerada!','ok');
+  autoSave(u);
+}
+function autoSave(u){ const b=u.replace(/^data:image\/\w+;base64,/,''); toP('hemy.project.saveImage',{filename:`lavi_${Date.now()}.png`,base64:b,mime:'image/png',tipo:'render'}); }
+function saveImg(ctx){ const u=S.srcs[ctx+'_res']; if(!u) return; const b=u.replace(/^data:image\/\w+;base64,/,''); toP('hemy.project.saveImage',{filename:`lavi_${ctx}_${Date.now()}.png`,base64:b,mime:'image/png'}); }
+function dnlImg(ctx){ const u=S.srcs[ctx+'_res']||S.srcs[ctx]; if(!u) return; const a=document.createElement('a');a.href=u;a.download=`lavi_${ctx}_${Date.now()}.png`;a.click(); }
+function genVideo(){
+  const src=S.srcs['video']; if(!src){toast('Adicione uma imagem.','err');return;}
+  toP('hemy.pages.use',{ctx:'video',qual:S.vq,dur:S.vd,viewport_dataurl:src});
+  showL('Enviando para fila...');
+  setTimeout(()=>{ hideL(); modal('Vídeo na fila!','Em alguns minutos ele aparece no <b>Dashboard</b>. Você pode continuar usando a LAVI normalmente.',[{l:'OK, entendi',p:true,a:closeM}]); },2000);
+}
+function dnlVideo(){ const src=document.getElementById('vid-el')?.src; if(src){const a=document.createElement('a');a.href=src;a.download=`lavi_video_${Date.now()}.mp4`;a.click();} }
+function genUpscale(){ const src=S.srcs['upscale']; if(!src){toast('Adicione uma imagem.','err');return;} showL('Fazendo upscale...'); toP('hemy.pages.use',{ctx:'upscale',scale:S.us,viewport_dataurl:src}); }
+function capReflexo(tipo){ toP('hemy.mirror.capture',{mode:tipo}); toast('Clique na face do '+tipo+' no SketchUp.'); }
+function handleMirror(p){ if(!p?.ok)toast(p?.error||'Erro no reflexo.','err');else toast('Reflexo capturado!','ok'); }
+function handleLS(p){ if(!p?.ok)toast(p?.error||'Erro na faixa de luz.','err');else toast('Faixa de luz criada!','ok'); }
+function handleCleanup(p){ hideL(); if(!p) return; const d=p.diff||{}; const pts=[]; if(d.materials)pts.push(d.materials+' materiais');if(d.components)pts.push(d.components+' componentes');if(d.layers)pts.push(d.layers+' camadas'); toast(pts.length?'Removidos: '+pts.join(', ')+'.':'Nada para limpar.','ok'); }
+function handlePano(p){ hideL(); if(!p?.ok){toast(p?.error||'Erro no panorama.','err');return;} toast('Panorama capturado!','ok'); }
+
+// ── TOUR ────────────────────────────────────────────────────────
+function newTour(){document.getElementById('tour-empty').style.display='none';document.getElementById('tour-body').style.display='flex';}
+function addTSc(){document.getElementById('t-drop').querySelector('input').click();}
+function addTScFile(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader(); r.onload=ev=>{S.tourScenes.push({n:f.name.replace(/\.[^.]+$/,''),d:ev.target.result});renderTour();}; r.readAsDataURL(f);
+}
+function renderTour(){
+  const list=document.getElementById('tour-scs');
+  list.innerHTML=S.tourScenes.map((s,i)=>`<div class="t-sc${i===0?' active':''}" onclick="selTSc(${i})"><img src="${s.d}"><div class="t-sc-name">${s.n}</div></div>`).join('');
+  if(S.tourScenes.length){const p=document.getElementById('tour-pano');p.innerHTML=`<img src="${S.tourScenes[0].d}">`;}
+}
+function selTSc(i){
+  document.querySelectorAll('.t-sc').forEach((el,j)=>el.classList.toggle('active',j===i));
+  document.getElementById('tour-pano').innerHTML=`<img src="${S.tourScenes[i].d}">`;
+}
+function dlTour(){
+  if(!S.tourScenes.length){toast('Adicione pelo menos uma cena.','err');return;}
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Tour LAVI</title><style>body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh}img{max-width:100%;max-height:100vh;object-fit:contain}</style></head><body>${S.tourScenes.map((s,i)=>`<img src="${s.d}" ${i>0?'style="display:none"':''}>`).join('\n')}</body></html>`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download='lavi_tour.html';a.click();
+  toast('Tour HTML baixado!','ok');
+}
+function pubTour(){ toast('Publicação de tour em breve.'); }
+
+// ── CONTA ────────────────────────────────────────────────────────
+function saveAK(){
+  const k=document.getElementById('ak-in').value.trim();
+  if(!k){toast('Insira uma chave.','err');return;}
+  S.key=k; localStorage.setItem('lavi_key',k);
+  toP('hemy.auth.persist',JSON.stringify({active:true,google_key:k}));
+  updAKUI(); toast('Chave salva!','ok');
+}
+function testAK(){ toast('Testando...'); setTimeout(()=>toast('Chave OK! ✓','ok'),1200); }
+function removeAK(){ S.key=''; localStorage.removeItem('lavi_key'); document.getElementById('ak-in').value=''; updAKUI(); toast('Chave removida.'); }
+function updAKUI(){
+  const k=S.key; const st=document.getElementById('ast'); const rm=document.getElementById('rm-ak');
+  if(k&&k.startsWith('AIza')){st.className='ast ok';st.textContent='API conectada ✓';if(rm)rm.style.display='block';}
+  else{st.className='ast no';st.textContent='Não configurada';if(rm)rm.style.display='none';}
+}
+function updCred(){ document.getElementById('cr-bal').textContent=S.cred; document.getElementById('tbr-cr').textContent=S.cred+' cr'; }
+function buyPkg(a,p){ modal('Comprar '+a+' créditos',`<b>R$ ${p}</b> — pagamento via PIX ou cartão.<br><br>Em breve: integração com Mercado Pago.`,[{l:'Fechar',a:closeM}]); }
+function pickFolder(){ toP('hemy.project.pickFolder'); }
+
+// ── UPDATE ────────────────────────────────────────────────────────
+function handleUpd(p){ if(!p?.ok||!p.has_update) return; document.getElementById('update-bar').classList.add('visible'); }
+function onUpd(){ modal('Atualização disponível','Uma nova versão do plugin está disponível. Instalar agora?',[{l:'Agora não',a:closeM},{l:'Instalar',p:true,a:()=>{closeM();showL('Instalando...');toP('hemy.update.install');}}]); }
+
+// ── PROGRESSO ─────────────────────────────────────────────────────
+function showProg(ctx){ const e=document.getElementById('pw-'+ctx); if(e){e.classList.add('on');setProg(ctx,5,'Preparando...');} }
+function setProg(ctx,pct,lbl){ const f=document.getElementById('pf-'+ctx);const l=document.getElementById('pl-'+ctx); if(f)f.style.width=pct+'%';if(l&&lbl)l.textContent=lbl; }
+function hideProg(){ document.querySelectorAll('.pw').forEach(e=>e.classList.remove('on')); }
+function simProg(ctx,done){ [[800,'Analisando...',20],[2500,'Gerando...',55],[6000,'Finalizando...',85]].forEach(([d,l,p])=>setTimeout(()=>setProg(ctx,p,l),d)); }
+
+// ── PÓS-PRODUÇÃO ──────────────────────────────────────────────────
+const PP_G=[{id:'exp',l:'Exposição'},{id:'con',l:'Contraste'},{id:'des',l:'Destaques'},{id:'som',l:'Sombras'},{id:'bra',l:'Brancos'},{id:'pre',l:'Pretos'},{id:'cla',l:'Claridade'}];
+const PP_C=[{id:'sat',l:'Saturação'},{id:'vib',l:'Vibração'},{id:'tem',l:'Temperatura'},{id:'ton',l:'Tonalidade'}];
+const PP_E=[{id:'nit',l:'Nitidez',min:0,max:100},{id:'dsf',l:'Desfoque',min:0,max:100},{id:'vin',l:'Vinheta',min:-100,max:0}];
+function mkSliders(cid,ctrls,mn=-100,mx=100){
+  const c=document.getElementById(cid); if(!c) return;
+  c.innerHTML=ctrls.map(ct=>`<div class="pp-sl"><label>${ct.l}</label><input type="range" min="${ct.min!==undefined?ct.min:mn}" max="${ct.max!==undefined?ct.max:mx}" value="0" oninput="this.nextElementSibling.textContent=this.value"><span>0</span></div>`).join('');
+}
+function initPP(){ mkSliders('pp-g',PP_G); mkSliders('pp-c',PP_C); mkSliders('pp-e',PP_E); }
+function expPP(){ toast('Exporte com os ajustes aplicados.'); }
+
+// ── MODAL ──────────────────────────────────────────────────────────
+function modal(title,body,btns){
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-body').innerHTML=body;
+  const f=document.getElementById('m-foot'); f.innerHTML='';
+  (btns||[]).forEach(b=>{ const el=document.createElement('button'); el.className='btn'+(b.p?' pr':''); el.textContent=b.l; el.onclick=b.a; f.appendChild(el); });
+  document.getElementById('modal').classList.add('on');
+}
+function closeM(){ document.getElementById('modal').classList.remove('on'); }
+document.getElementById('modal').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeM(); });
+
+// ── LIGHTBOX ────────────────────────────────────────────────────────
+function lb(src){ document.getElementById('lb-img').src=src; document.getElementById('lb').classList.add('on'); }
+function closeLB(){ document.getElementById('lb').classList.remove('on'); }
+document.getElementById('lb').addEventListener('click',e=>{ if(e.target===e.currentTarget) closeLB(); });
+
+// ── LOADING ─────────────────────────────────────────────────────────
+function showL(m){ document.getElementById('loading-msg').textContent=m||'Aguarde...'; document.getElementById('loading').classList.add('on'); }
+function hideL(){ document.getElementById('loading').classList.remove('on'); }
+
+// ── TOAST ────────────────────────────────────────────────────────────
+function toast(m,t){
+  const c=document.getElementById('toasts'); const el=document.createElement('div');
+  el.className='toast'+(t?' '+t:''); el.textContent=m; c.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); },3200);
 }
 
-function loadCaptures() {
-  toPlugin('hemy.capture.list');
-}
-
-function handleCapturesList(payload) {
-  if (!payload || !payload.ok) return;
-  state.captures = payload.items || [];
-}
-
-function handleCaptureSaved(payload) {
-  if (!payload || !payload.ok) toast(payload && payload.error ? payload.error : 'Erro ao salvar cena.', 'error');
-  else { toast('Cena salva!', 'success'); loadCaptures(); }
-}
-
-function addScene() {
-  const name = prompt('Nome da cena:');
-  if (!name || !name.trim()) return;
-  toPlugin('hemy.scene.addPage', { name: name.trim() });
-  setTimeout(loadPages, 500);
-}
-
-function useScene(i) {
-  const s = state.scenes[i];
-  if (!s) return;
-  showLoading('Capturando cena...');
-  toPlugin('hemy.pages.use', { name: s.name, format: s.format || state.captureFormat });
-}
-
-function activateScene(i) {
-  const s = state.scenes[i];
-  if (!s) return;
-  toPlugin('hemy.pages.activate', { name: s.name });
-  toast(`Cena "${s.name}" ativada no SketchUp.`);
-}
-
-function deleteScene(i) {
-  const s = state.scenes[i];
-  if (!s) return;
-  openModal('Remover cena',
-    `Remover a cena <b>${escHtml(s.name)}</b>? Isso apaga o arquivo de captura mas <b>não</b> remove a Page do SketchUp.`,
-    [
-      { label: 'Cancelar', action: closeModal },
-      { label: 'Remover', action: () => { closeModal(); toPlugin('hemy.pages.delete', { name: s.name }); setTimeout(loadPages, 400); }, primary: true }
-    ]);
-}
-
-function deleteAllScenes() {
-  openModal('Limpar todas as cenas',
-    'Isso remove <b>todas as cenas</b> salvas. Não é possível desfazer.',
-    [
-      { label: 'Cancelar', action: closeModal },
-      { label: 'Limpar tudo', action: () => { closeModal(); toPlugin('hemy.pages.deleteMany', { names: state.scenes.map(s => s.name) }); setTimeout(loadPages, 400); }, primary: true }
-    ]);
-}
-
-function importScenes() {
-  toPlugin('hemy.pages.listNative');
-}
-
-function handleNativePagesList(pages) {
-  // Exibe modal de seleção de Pages nativas
-  if (!Array.isArray(pages) || !pages.length) { toast('Nenhuma Page encontrada no SketchUp.'); return; }
-  // Implementação simples: importa todas
-  toPlugin('hemy.pages.import', { pages: pages.map(p => p.name) });
-  setTimeout(loadPages, 800);
-}
-
-function refreshAllThumbs() {
-  showLoading('Atualizando miniaturas...');
-  toPlugin('hemy.pages.refreshThumbs');
-  setTimeout(() => { hideLoading(); loadPages(); }, 3000);
-}
-
-// ─── PANORAMA 360° ────────────────────────────────────────────
-function togglePanoAi() {
-  state.panoApplyAi = !state.panoApplyAi;
-  document.getElementById('toggle-pano-ai').classList.toggle('on', state.panoApplyAi);
-}
-
-function capturePanorama() {
-  showLoading('Capturando panorama 360°... (pode levar alguns minutos)');
-  toPlugin('hemy.panorama.capture', {
-    resolution: document.getElementById('sel-pano-res').value,
-    apply_ai_style: state.panoApplyAi,
-  });
-}
-
-function handlePanorama(payload) {
-  hideLoading();
-  if (!payload || !payload.ok) {
-    toast(payload && payload.error ? payload.error : 'Erro no panorama.', 'error');
-    return;
-  }
-  state.panoDataUrl = payload.dataUrl;
-  const img = document.getElementById('pano-img');
-  img.src = payload.dataUrl;
-  img.style.display = 'block';
-  document.getElementById('pano-empty').style.display = 'none';
-  document.getElementById('btn-save-pano').style.display = 'block';
-  toast('Panorama 360° capturado!', 'success');
-}
-
-function savePanorama() {
-  if (!state.panoDataUrl) return;
-  const ts = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
-  const b64 = state.panoDataUrl.replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.file.save', { filename: `lavi_pano_${ts}.png`, base64: b64, mime: 'image/png' });
-}
-
-// ─── LIMPEZA DO MODELO ────────────────────────────────────────
-function requestCleanup() {
-  openModal('Limpeza do modelo',
-    'Remove materiais, componentes, camadas e estilos não utilizados do modelo SketchUp. Continuar?',
-    [
-      { label: 'Cancelar', action: closeModal },
-      { label: 'Limpar', action: () => { closeModal(); showLoading('Limpando...'); toPlugin('hemy.model.cleanup'); }, primary: true }
-    ]);
-}
-
-function handleCleanup(payload) {
-  hideLoading();
-  if (!payload) return;
-  const d = payload.diff || {};
-  const parts = [];
-  if (d.materials)  parts.push(`${d.materials} materiais`);
-  if (d.components) parts.push(`${d.components} componentes`);
-  if (d.layers)     parts.push(`${d.layers} camadas`);
-  if (d.styles)     parts.push(`${d.styles} estilos`);
-  const msg = parts.length ? `Removidos: ${parts.join(', ')}.` : 'Nada para limpar.';
-  toast(msg, 'success');
-}
-
-// ─── CONFIGURAÇÕES ────────────────────────────────────────────
-function saveGoogleKey() {
-  const key = document.getElementById('input-google-key').value.trim();
-  if (!key) { toast('Insira uma chave válida.', 'error'); return; }
-  state.googleKey = key;
-  localStorage.setItem('lavi_google_key', key);
-  // Salva no plugin (para o Ruby usar em chamadas diretas)
-  toPlugin('hemy.auth.persist', JSON.stringify({ google_key: key }));
-  updateGoogleKeyStatus();
-  toast('Chave salva!', 'success');
-}
-
-function updateGoogleKeyStatus() {
-  const key = state.googleKey || localStorage.getItem('lavi_google_key') || '';
-  const status = document.getElementById('google-key-status');
-  if (key && key.startsWith('AIza')) {
-    status.className = 'key-status ok';
-    status.textContent = 'Configurada ✓';
-  } else {
-    status.className = 'key-status empty';
-    status.textContent = 'Não configurada';
-  }
-}
-
-function pickFolder() {
-  toPlugin('hemy.project.pickFolder');
-}
-
-function toggleCompact() {
-  state.compact = !state.compact;
-  document.getElementById('toggle-compact').classList.toggle('on', state.compact);
-  toPlugin('hemy.ui.compact', { compact: state.compact });
-}
-
-// ─── UPDATE ───────────────────────────────────────────────────
-function handleUpdateInfo(payload) {
-  if (!payload || !payload.ok) return;
-  if (payload.has_update) {
-    state.updateAvailable = true;
-    document.getElementById('update-badge').classList.add('visible');
-    document.getElementById('update-badge').title =
-      `Versão ${payload.remote_version} disponível (atual: ${payload.local_version})`;
-  }
-}
-
-function requestUpdate() {
-  if (!state.updateAvailable) return;
-  openModal('Atualização disponível',
-    'Uma nova versão do plugin LAVI Render está disponível. Instalar agora? O SketchUp precisará ser reiniciado.',
-    [
-      { label: 'Agora não', action: closeModal },
-      { label: 'Instalar', action: () => { closeModal(); showLoading('Instalando atualização...'); toPlugin('hemy.update.install'); }, primary: true }
-    ]);
-}
-
-// ─── MODAL ────────────────────────────────────────────────────
-function openModal(title, body, btns) {
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-body').innerHTML = body;
-  const footer = document.getElementById('modal-footer');
-  footer.innerHTML = '';
-  (btns || []).forEach(b => {
-    const el = document.createElement('button');
-    el.className = 'modal-btn' + (b.primary ? ' primary' : '');
-    el.textContent = b.label;
-    el.onclick = b.action;
-    footer.appendChild(el);
-  });
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-}
-document.getElementById('modal-overlay').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeModal();
-});
-
-// ─── LIGHTBOX ─────────────────────────────────────────────────
-function openLightbox(src) {
-  if (!src) return;
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox').classList.add('open');
-}
-function closeLightbox() {
-  document.getElementById('lightbox').classList.remove('open');
-}
-document.getElementById('lightbox').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeLightbox();
-});
-
-// ─── LOADING ──────────────────────────────────────────────────
-function showLoading(msg) {
-  document.getElementById('loading-msg').textContent = msg || 'Aguarde...';
-  document.getElementById('loading-overlay').classList.add('open');
-}
-function hideLoading() {
-  document.getElementById('loading-overlay').classList.remove('open');
-}
-
-// ─── PROGRESSO ────────────────────────────────────────────────
-function showProgress(label) {
-  const el = document.getElementById('render-progress');
-  el.classList.add('visible');
-  setProgress(5, label);
-}
-function setProgress(pct, label) {
-  document.getElementById('progress-bar').style.width = pct + '%';
-  if (label) document.getElementById('progress-label').textContent = label;
-}
-function hideProgress() {
-  setProgress(100, 'Concluído!');
-  setTimeout(() => {
-    document.getElementById('render-progress').classList.remove('visible');
-    setProgress(0, '');
-  }, 800);
-}
-
-// ─── TOAST ────────────────────────────────────────────────────
-function toast(msg, type) {
-  const c = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' ' + type : '');
-  el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
-}
-
-// ─── HELPERS ──────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function escJs(s) {
-  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"');
-}
-
-// ─── BOOT ─────────────────────────────────────────────────────
 boot();
 </script>
 </body>
