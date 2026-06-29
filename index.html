@@ -1,1880 +1,1822 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LAVI Render</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    /* ─── RESET ─────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; width: 100%; background: #f7f5f1; color: #1c1c1c; font-family: 'Montserrat', -apple-system, sans-serif; overflow: hidden; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAVI AI</title>
+<style>
+/* ═══════════════════════════════════════════════
+   LAVI AI — idêntico ao HEMY AI
+   Cores, tipografia e layout replicados fielmente
+   ═══════════════════════════════════════════════ */
+:root {
+  --bg: #0f0f0f;
+  --bg2: #161616;
+  --bg3: #1e1e1e;
+  --bg4: #252525;
+  --border: #2a2a2a;
+  --border2: #333;
+  --txt: #e8e8e8;
+  --txt2: #aaa;
+  --txt3: #666;
+  --accent: #fff;
+  --accent2: #f0f0f0;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --blue: #3b82f6;
+  --radius: 8px;
+  --radius2: 12px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: var(--bg); color: var(--txt); font-family: var(--font); font-size: 14px; line-height: 1.5; overflow: hidden; }
 
-    /* ─── VARIÁVEIS LAVI ─────────────────────────────────────── */
-    :root {
-      --bg:        #f7f5f1;
-      --bg2:       #eeeae4;
-      --card:      #ffffff;
-      --border:    #e3dfd9;
-      --text:      #1c1c1c;
-      --text2:     #6b6660;
-      --text3:     #9e9890;
-      --accent:    #1c1c1c;
-      --accent-fg: #ffffff;
-      --rose:      #c9847a;
-      --petrol:    #3b6475;
-      --sand:      #c4ab8a;
-      --radius:    12px;
-      --radius-sm: 8px;
-      --shadow:    0 2px 12px rgba(0,0,0,.07);
-      --shadow-lg: 0 8px 32px rgba(0,0,0,.12);
-    }
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 
-    /* ─── LAYOUT PRINCIPAL ───────────────────────────────────── */
-    #app {
-      display: flex;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-    }
+/* ── LAYOUT ── */
+#app { display: flex; flex-direction: column; height: 100vh; }
 
-    /* ─── SIDEBAR ────────────────────────────────────────────── */
-    #sidebar {
-      width: 220px;
-      min-width: 220px;
-      background: var(--card);
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 0;
-      overflow: hidden;
-      z-index: 10;
-    }
-    .sidebar-logo {
-      padding: 24px 20px 20px;
-      border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .sidebar-logo span {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: var(--text);
-    }
-    .sidebar-logo sub {
-      font-size: 8px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      color: var(--rose);
-      text-transform: uppercase;
-      vertical-align: bottom;
-      margin-left: 2px;
-    }
-    .sidebar-nav {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px 0;
-    }
-    .nav-section {
-      padding: 6px 14px 2px;
-      font-size: 8.5px;
-      font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--text3);
-    }
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 18px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text2);
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      transition: all .15s;
-      user-select: none;
-    }
-    .nav-item:hover { background: var(--bg); color: var(--text); }
-    .nav-item.active { background: var(--bg); color: var(--text); border-left-color: var(--text); }
-    .nav-item .nav-icon { width: 16px; height: 16px; opacity: .7; flex-shrink: 0; }
-    .nav-item.active .nav-icon { opacity: 1; }
-    .sidebar-footer {
-      padding: 14px 18px;
-      border-top: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .sidebar-version { font-size: 9px; color: var(--text3); font-weight: 600; letter-spacing: .04em; }
+/* ── NAV ── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 52px; background: var(--bg2);
+  border-bottom: 1px solid var(--border); flex-shrink: 0; position: relative; z-index: 100;
+}
+.nav-logo { font-size: 16px; font-weight: 800; letter-spacing: 0.12em; text-transform: lowercase; color: #fff; }
+.nav-logo span { color: #fff; }
+.nav-tabs { display: flex; gap: 2px; }
+.nav-tab {
+  padding: 6px 14px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; font-weight: 500; color: var(--txt2);
+  border: none; background: none; transition: all 0.15s;
+}
+.nav-tab:hover { color: var(--txt); background: var(--bg3); }
+.nav-tab.active { color: #fff; background: var(--bg4); }
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-credits {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px; border-radius: 6px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  font-size: 12px; color: var(--txt2); cursor: pointer;
+}
+.nav-credits strong { color: #fff; }
+.nav-btn {
+  padding: 6px 14px; border-radius: 6px; cursor: pointer;
+  font-size: 13px; font-weight: 500; border: none;
+  background: var(--bg3); color: var(--txt2); transition: all 0.15s;
+}
+.nav-btn:hover { background: var(--bg4); color: var(--txt); }
 
-    /* ─── ÁREA PRINCIPAL ──────────────────────────────────────── */
-    #main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .topbar {
-      height: 54px;
-      background: var(--card);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      padding: 0 24px;
-      gap: 12px;
-      flex-shrink: 0;
-    }
-    .topbar-title {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: .01em;
-      flex: 1;
-    }
-    .topbar-skp {
-      font-size: 10px;
-      color: var(--text3);
-      font-weight: 600;
-      background: var(--bg2);
-      padding: 4px 10px;
-      border-radius: 20px;
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .topbar-btn {
-      height: 32px;
-      padding: 0 14px;
-      border-radius: var(--radius-sm);
-      border: 1.3px solid var(--border);
-      background: var(--card);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all .15s;
-      white-space: nowrap;
-    }
-    .topbar-btn:hover { border-color: var(--text); }
-    .topbar-btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
-    .topbar-btn.primary:hover { background: #333; }
+/* ── MAIN CONTENT ── */
+#main { flex: 1; overflow: hidden; display: flex; }
+.page { display: none; flex: 1; overflow-y: auto; }
+.page.active { display: flex; flex-direction: column; }
 
-    /* ─── CONTEÚDO (abas) ─────────────────────────────────────── */
-    .page { display: none; flex: 1; overflow: hidden; }
-    .page.active { display: flex; flex-direction: column; }
+/* ═══ DASHBOARD ═══ */
+#page-dashboard { padding: 28px 32px; gap: 24px; }
+.dash-header { display: flex; align-items: center; justify-content: space-between; }
+.dash-title { font-size: 18px; font-weight: 700; color: #fff; }
+.dash-subtitle { font-size: 13px; color: var(--txt3); margin-top: 4px; line-height: 1.6; }
+.dash-subtitle strong { color: var(--txt2); }
+.dash-actions { display: flex; gap: 8px; }
+.btn { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-ghost { background: var(--bg3); color: var(--txt2); border: 1px solid var(--border2); }
+.btn-ghost:hover { background: var(--bg4); color: var(--txt); }
+.btn-white { background: #fff; color: #000; }
+.btn-white:hover { background: #f0f0f0; }
+.btn-primary { background: var(--bg3); color: #fff; border: 1px solid var(--border2); }
+.btn-primary:hover { background: var(--bg4); }
+.btn-danger { background: #7f1d1d; color: #fca5a5; }
+.btn-danger:hover { background: #991b1b; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
 
-    /* ─── PÁGINA: RENDER ──────────────────────────────────────── */
-    #page-render {
-      flex-direction: row;
-    }
-    .render-canvas-area {
-      flex: 1;
-      background: var(--bg2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .render-placeholder {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      color: var(--text3);
-    }
-    .render-placeholder svg { opacity: .35; }
-    .render-placeholder p { font-size: 12px; font-weight: 600; letter-spacing: .02em; }
-    #render-preview {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: contain;
-      border-radius: 4px;
-      box-shadow: var(--shadow-lg);
-      display: none;
-    }
-    .render-panel {
-      width: 300px;
-      min-width: 300px;
-      background: var(--card);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      padding: 20px;
-      gap: 18px;
-    }
-    .rpanel-section { display: flex; flex-direction: column; gap: 8px; }
-    .rpanel-label {
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--text3);
-    }
-    .rpanel-select, .rpanel-input, .rpanel-textarea {
-      width: 100%;
-      padding: 9px 12px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
-      background: var(--bg);
-      appearance: none;
-      transition: border .15s;
-    }
-    .rpanel-select:focus, .rpanel-input:focus, .rpanel-textarea:focus {
-      outline: none;
-      border-color: var(--text);
-    }
-    .rpanel-textarea { resize: vertical; min-height: 80px; }
-    .rpanel-row { display: flex; gap: 8px; }
-    .rpanel-row .rpanel-select { flex: 1; }
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .toggle {
-      width: 36px; height: 20px;
-      background: var(--border);
-      border-radius: 10px;
-      position: relative;
-      cursor: pointer;
-      transition: background .2s;
-      flex-shrink: 0;
-    }
-    .toggle.on { background: var(--text); }
-    .toggle::after {
-      content: '';
-      position: absolute;
-      top: 3px; left: 3px;
-      width: 14px; height: 14px;
-      border-radius: 50%;
-      background: #fff;
-      transition: transform .2s;
-    }
-    .toggle.on::after { transform: translateX(16px); }
-    .render-btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--text);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background .15s;
-    }
-    .render-btn:hover { background: #333; }
-    .render-btn:disabled { background: var(--text3); cursor: not-allowed; }
-    .render-btn.loading {
-      background: var(--text);
-      cursor: wait;
-      opacity: .7;
-    }
-    .capture-btn {
-      width: 100%;
-      padding: 11px;
-      background: transparent;
-      color: var(--text);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .capture-btn:hover { border-color: var(--text); background: var(--bg); }
+/* History grid */
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+.dash-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius2); overflow: hidden; cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.dash-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.dash-card-img { width: 100%; aspect-ratio: 1; object-fit: cover; background: var(--bg3); display: block; }
+.dash-card-img-placeholder {
+  width: 100%; aspect-ratio: 1; background: var(--bg3);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--txt3); font-size: 12px;
+}
+.dash-card-body { padding: 12px; }
+.dash-card-name { font-size: 12px; font-weight: 600; color: var(--txt); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-card-meta { font-size: 11px; color: var(--txt3); margin-top: 2px; }
+.dash-card-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.dash-card-btn { padding: 4px 8px; border-radius: 5px; font-size: 11px; cursor: pointer; border: 1px solid var(--border2); background: var(--bg3); color: var(--txt2); transition: all 0.12s; }
+.dash-card-btn:hover { background: var(--bg4); color: var(--txt); }
+.dash-empty { text-align: center; padding: 80px 20px; color: var(--txt3); }
+.dash-empty-icon { font-size: 40px; margin-bottom: 12px; }
+.dash-empty-title { font-size: 15px; font-weight: 600; color: var(--txt2); margin-bottom: 6px; }
+.dash-empty-text { font-size: 13px; line-height: 1.6; }
 
-    /* Miniatura da captura */
-    .capture-thumb-wrap {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 16/9;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      background: var(--bg2);
-      border: 1.3px solid var(--border);
-    }
-    .capture-thumb-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-    .capture-thumb-wrap .capture-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: var(--text3);
-      font-weight: 600;
-    }
+/* ═══ CENAS ═══ */
+#page-cenas { padding: 28px 32px; gap: 20px; }
+.cenas-header { display: flex; align-items: center; justify-content: space-between; }
+.cenas-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+.cena-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius2); overflow: hidden; cursor: pointer;
+  transition: border-color 0.15s;
+}
+.cena-card:hover { border-color: var(--border2); }
+.cena-thumb { width: 100%; aspect-ratio: 16/9; background: var(--bg3); object-fit: cover; display: block; }
+.cena-body { padding: 10px 12px; }
+.cena-name { font-size: 12px; font-weight: 600; color: var(--txt); }
+.cena-fmt { font-size: 11px; color: var(--txt3); }
+.cena-actions { display: flex; gap: 6px; margin-top: 8px; }
+.cenas-empty { text-align: center; padding: 60px 20px; color: var(--txt3); }
 
-    /* ─── PÁGINA: CENAS ───────────────────────────────────────── */
-    #page-cenas { flex-direction: column; }
-    .cenas-toolbar {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .cenas-grid {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 16px;
-      align-content: start;
-    }
-    .cena-card {
-      background: var(--card);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      transition: box-shadow .15s;
-    }
-    .cena-card:hover { box-shadow: var(--shadow); }
-    .cena-thumb {
-      width: 100%;
-      aspect-ratio: 16/9;
-      background: var(--bg2);
-      position: relative;
-      overflow: hidden;
-    }
-    .cena-thumb img { width: 100%; height: 100%; object-fit: cover; }
-    .cena-thumb-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: var(--text3);
-      font-weight: 600;
-    }
-    .cena-info { padding: 12px 14px; }
-    .cena-name {
-      font-size: 12px;
-      font-weight: 700;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .cena-meta { font-size: 10px; color: var(--text3); font-weight: 600; }
-    .cena-actions {
-      padding: 0 14px 12px;
-      display: flex;
-      gap: 6px;
-    }
-    .cena-action {
-      flex: 1;
-      padding: 7px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: transparent;
-      font-family: inherit;
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      transition: all .15s;
-      text-align: center;
-    }
-    .cena-action:hover { border-color: var(--text); background: var(--bg); }
-    .cena-action.primary { background: var(--text); color: #fff; border-color: var(--text); }
-    .cena-action.primary:hover { background: #333; }
-    .cena-action.danger { color: #c0392b; }
-    .cena-action.danger:hover { border-color: #c0392b; background: #fff5f5; }
-    .empty-state {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      color: var(--text3);
-      padding: 40px;
-      text-align: center;
-    }
-    .empty-state svg { opacity: .3; }
-    .empty-state h3 { font-size: 14px; font-weight: 700; color: var(--text); }
-    .empty-state p { font-size: 12px; line-height: 1.6; }
+/* ═══ CRIAR ═══ */
+#page-criar {
+  display: flex; flex: 1; overflow: hidden;
+}
+.criar-sidebar {
+  width: 340px; flex-shrink: 0; background: var(--bg2);
+  border-right: 1px solid var(--border); overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.criar-main {
+  flex: 1; overflow-y: auto; display: flex; flex-direction: column;
+  gap: 0; background: var(--bg);
+}
 
-    /* ─── PÁGINA: GALERIA (Histórico) ─────────────────────────── */
-    #page-galeria { flex-direction: column; }
-    .gallery-filters {
-      padding: 16px 20px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-    .gallery-grid {
-      flex: 1;
-      overflow-y: auto;
-      padding: 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-      gap: 14px;
-      align-content: start;
-    }
-    .gallery-card {
-      background: var(--card);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      cursor: pointer;
-      transition: all .15s;
-    }
-    .gallery-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
-    .gallery-img {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      display: block;
-      background: var(--bg2);
-    }
-    .gallery-info {
-      padding: 10px 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .gallery-name { font-size: 11px; font-weight: 600; }
-    .gallery-date { font-size: 9.5px; color: var(--text3); font-weight: 600; }
-    .gallery-actions {
-      padding: 0 12px 10px;
-      display: flex;
-      gap: 6px;
-    }
-    .gal-btn {
-      flex: 1;
-      padding: 6px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: transparent;
-      font-family: inherit;
-      font-size: 10px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      transition: all .15s;
-    }
-    .gal-btn:hover { border-color: var(--text); background: var(--bg); }
+/* Stepper */
+.stepper {
+  display: flex; align-items: center; gap: 0;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+.step {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--txt3);
+}
+.step.active { color: var(--txt); }
+.step.done { color: var(--green); }
+.step-num {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700;
+}
+.step.active .step-num { background: #fff; color: #000; border-color: #fff; }
+.step.done .step-num { background: var(--green); border-color: var(--green); color: #fff; }
+.step-arrow { color: var(--txt3); margin: 0 8px; font-size: 10px; }
 
-    /* ─── PÁGINA: 360° ────────────────────────────────────────── */
-    #page-360 { flex-direction: column; align-items: center; justify-content: center; }
-    .pano-area {
-      width: 100%;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      padding: 40px;
-    }
-    .pano-preview {
-      width: 100%;
-      max-width: 600px;
-      aspect-ratio: 2/1;
-      background: var(--bg2);
-      border-radius: var(--radius);
-      border: 1.3px solid var(--border);
-      overflow: hidden;
-      position: relative;
-    }
-    .pano-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: none;
-    }
-    .pano-empty {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      color: var(--text3);
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .pano-controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      width: 100%;
-      max-width: 400px;
-    }
+/* Tool selector */
+.tool-selector { padding: 20px; }
+.tool-selector-title { font-size: 13px; font-weight: 600; color: var(--txt2); margin-bottom: 14px; }
+.tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tool-card {
+  padding: 14px 12px; border-radius: var(--radius);
+  background: var(--bg3); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.15s;
+}
+.tool-card:hover { border-color: var(--border2); background: var(--bg4); }
+.tool-card.active { border-color: #fff; background: var(--bg4); }
+.tool-card-name { font-size: 12px; font-weight: 600; color: var(--txt); }
+.tool-card-desc { font-size: 11px; color: var(--txt3); margin-top: 3px; line-height: 1.4; }
 
-    /* ─── PÁGINA: CONFIGURAÇÕES ───────────────────────────────── */
-    #page-config { flex-direction: column; overflow-y: auto; }
-    .config-body {
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 28px;
-      max-width: 600px;
-    }
-    .config-section {
-      background: var(--card);
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-    .config-section-title {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: .02em;
-    }
-    .config-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-    .config-row-label { font-size: 12px; font-weight: 600; }
-    .config-row-sub { font-size: 10.5px; color: var(--text2); margin-top: 1px; }
-    .config-input {
-      flex: 1;
-      max-width: 240px;
-      padding: 9px 12px;
-      border: 1.3px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text);
-      background: var(--bg);
-    }
-    .config-input:focus { outline: none; border-color: var(--text); }
-    .config-save {
-      padding: 11px 22px;
-      background: var(--text);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-family: inherit;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .06em;
-      cursor: pointer;
-    }
-    .config-save:hover { background: #333; }
-    .key-status {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-    .key-status.ok { background: #e8f5e9; color: #2e7d32; }
-    .key-status.empty { background: var(--bg2); color: var(--text3); }
+/* Upload zone */
+.upload-zone {
+  margin: 20px; border: 1.5px dashed var(--border2); border-radius: var(--radius2);
+  padding: 32px 20px; text-align: center; cursor: pointer; transition: all 0.15s;
+  background: var(--bg2);
+}
+.upload-zone:hover, .upload-zone.drag { border-color: #666; background: var(--bg3); }
+.upload-zone-icon { font-size: 28px; margin-bottom: 10px; color: var(--txt3); }
+.upload-zone-title { font-size: 13px; font-weight: 600; color: var(--txt2); }
+.upload-zone-sub { font-size: 12px; color: var(--txt3); margin-top: 4px; }
+.upload-zone-exts { display: flex; gap: 6px; justify-content: center; margin-top: 10px; }
+.ext-badge { padding: 2px 7px; border-radius: 4px; background: var(--bg3); border: 1px solid var(--border2); font-size: 10px; font-weight: 600; color: var(--txt3); }
 
-    /* ─── TOAST ──────────────────────────────────────────────── */
-    #toast-container {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
-    }
-    .toast {
-      padding: 10px 18px;
-      background: #1c1c1c;
-      color: #fff;
-      border-radius: 9px;
-      font-size: 12px;
-      font-weight: 600;
-      box-shadow: var(--shadow-lg);
-      animation: toast-in .2s ease;
-      pointer-events: auto;
-    }
-    .toast.error { background: #c0392b; }
-    .toast.success { background: #2e7d32; }
-    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+/* Image preview */
+.img-preview-wrap { margin: 20px; position: relative; }
+.img-preview { width: 100%; border-radius: var(--radius2); display: block; }
+.img-preview-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 
-    /* ─── MODAL ──────────────────────────────────────────────── */
-    #modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.45);
-      z-index: 1000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    #modal-overlay.open { display: flex; }
-    .modal-box {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 28px;
-      max-width: 460px;
-      width: 90%;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      box-shadow: var(--shadow-lg);
-    }
-    .modal-title { font-size: 15px; font-weight: 800; }
-    .modal-body { font-size: 12px; color: var(--text2); line-height: 1.6; }
-    .modal-body b { color: var(--text); }
-    .modal-footer { display: flex; gap: 10px; margin-top: 4px; }
-    .modal-btn {
-      flex: 1;
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      border: 1.3px solid var(--border);
-      background: transparent;
-      font-family: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text);
-      transition: all .15s;
-    }
-    .modal-btn:hover { border-color: var(--text); }
-    .modal-btn.primary { background: var(--text); color: #fff; border-color: var(--text); }
-    .modal-btn.primary:hover { background: #333; }
+/* Upload sources */
+.upload-sources { padding: 0 20px 20px; display: flex; flex-direction: column; gap: 8px; }
+.source-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius);
+  background: var(--bg2); border: 1px solid var(--border);
+  cursor: pointer; transition: all 0.15s; color: var(--txt2); font-size: 13px;
+}
+.source-btn:hover { border-color: var(--border2); background: var(--bg3); color: var(--txt); }
+.source-btn-icon { font-size: 16px; width: 20px; text-align: center; }
+.source-btn-text { font-size: 13px; }
+.source-btn-sub { font-size: 11px; color: var(--txt3); margin-top: 1px; }
 
-    /* ─── LIGHTBOX ───────────────────────────────────────────── */
-    #lightbox {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.88);
-      z-index: 2000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-    #lightbox.open { display: flex; }
-    #lightbox img {
-      max-width: 90vw;
-      max-height: 90vh;
-      object-fit: contain;
-      border-radius: 6px;
-    }
-    #lightbox-close {
-      position: absolute;
-      top: 18px; right: 18px;
-      width: 36px; height: 36px;
-      background: rgba(255,255,255,.15);
-      border: none;
-      border-radius: 50%;
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+/* Form sections */
+.form-section { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+.form-section-title {
+  font-size: 12px; font-weight: 700; color: var(--txt2);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.form-label { font-size: 12px; font-weight: 500; color: var(--txt2); margin-bottom: 6px; display: block; }
+.form-optional { font-size: 10px; color: var(--txt3); margin-left: 4px; font-weight: 400; }
+.form-row { margin-bottom: 14px; }
+.form-row:last-child { margin-bottom: 0; }
+select, input[type=text], input[type=number], textarea {
+  width: 100%; padding: 8px 10px; border-radius: var(--radius);
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--txt); font-size: 13px; font-family: var(--font);
+  appearance: none; outline: none; transition: border-color 0.15s;
+}
+select:focus, input:focus, textarea:focus { border-color: #555; }
+textarea { resize: vertical; min-height: 80px; }
+.select-wrap { position: relative; }
+.select-wrap::after { content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--txt3); pointer-events: none; font-size: 10px; }
 
-    /* ─── LOADING OVERLAY ────────────────────────────────────── */
-    #loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(247,245,241,.8);
-      backdrop-filter: blur(4px);
-      z-index: 500;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-    }
-    #loading-overlay.open { display: flex; }
-    .loading-spinner {
-      width: 36px; height: 36px;
-      border: 3px solid var(--border);
-      border-top-color: var(--text);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .loading-msg { font-size: 12px; font-weight: 700; color: var(--text2); }
+/* Chips / multi-select */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 5px 11px; border-radius: 20px; font-size: 12px;
+  border: 1px solid var(--border2); background: var(--bg3);
+  color: var(--txt2); cursor: pointer; transition: all 0.12s; user-select: none;
+}
+.chip:hover { border-color: #555; color: var(--txt); }
+.chip.active { border-color: #fff; background: var(--bg4); color: #fff; }
 
-    /* ─── COMPACT MODE (livro fechado) ───────────────────────── */
-    @media (max-width: 600px) {
-      #sidebar { width: 54px; min-width: 54px; }
-      .sidebar-logo span { display: none; }
-      .sidebar-logo { padding: 16px; display: flex; justify-content: center; }
-      .nav-item span { display: none; }
-      .nav-item { padding: 12px; justify-content: center; border-left: none; border-bottom: 3px solid transparent; }
-      .nav-item.active { border-bottom-color: var(--text); }
-      .nav-section { display: none; }
-      .render-panel { width: 260px; min-width: 260px; }
-    }
+/* Slider */
+.slider-row { display: flex; align-items: center; gap: 10px; }
+.slider-row input[type=range] {
+  flex: 1; height: 3px; background: var(--border2);
+  border-radius: 2px; outline: none; cursor: pointer; padding: 0;
+  accent-color: #fff;
+}
+.slider-val { font-size: 12px; color: var(--txt2); min-width: 36px; text-align: right; }
 
-    /* ─── SCROLLBAR ──────────────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+/* Toggle */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
+.toggle-label { font-size: 13px; color: var(--txt2); }
+.toggle {
+  width: 36px; height: 20px; border-radius: 10px; background: var(--bg4);
+  border: 1px solid var(--border2); cursor: pointer; position: relative;
+  transition: background 0.15s; flex-shrink: 0;
+}
+.toggle.on { background: #fff; }
+.toggle::after {
+  content: ''; position: absolute; width: 14px; height: 14px;
+  border-radius: 50%; background: #666; top: 2px; left: 2px;
+  transition: left 0.15s, background 0.15s;
+}
+.toggle.on::after { left: 18px; background: #000; }
 
-    /* ─── CHIP / TAG ─────────────────────────────────────────── */
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 3px 9px;
-      border-radius: 20px;
-      font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: .04em;
-      background: var(--bg2);
-      color: var(--text2);
-    }
-    .chip.active { background: #e8f5e9; color: #2e7d32; }
+/* Generate button area */
+.gen-area {
+  padding: 20px; border-top: 1px solid var(--border);
+  background: var(--bg2); position: sticky; bottom: 0;
+}
+.gen-prompt-wrap { position: relative; margin-bottom: 10px; }
+.gen-prompt {
+  width: 100%; padding: 10px 40px 10px 12px; border-radius: var(--radius);
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--txt); font-size: 13px; font-family: var(--font);
+  resize: none; min-height: 70px; outline: none;
+}
+.gen-prompt:focus { border-color: #555; }
+.gen-lang-btn {
+  position: absolute; top: 8px; right: 8px;
+  padding: 3px 6px; border-radius: 4px;
+  background: var(--bg4); border: 1px solid var(--border2);
+  color: var(--txt3); font-size: 10px; cursor: pointer;
+}
+.gen-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.gen-quality { display: flex; gap: 4px; }
+.quality-btn {
+  padding: 5px 9px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border2); background: var(--bg3); color: var(--txt3);
+  cursor: pointer; transition: all 0.12s;
+}
+.quality-btn:hover { color: var(--txt); }
+.quality-btn.active { border-color: #fff; color: #fff; background: var(--bg4); }
+.gen-btn {
+  padding: 10px 20px; border-radius: 7px; font-size: 14px; font-weight: 700;
+  border: none; cursor: pointer; transition: all 0.15s;
+  background: #fff; color: #000; white-space: nowrap;
+}
+.gen-btn:hover { background: #e8e8e8; }
+.gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.gen-btn-sub { font-size: 10px; color: #666; font-weight: 500; }
 
-    /* ─── FORMATO PILL ───────────────────────────────────────── */
-    .format-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-    .format-pill {
-      padding: 5px 11px;
-      border-radius: 20px;
-      border: 1.3px solid var(--border);
-      background: transparent;
-      font-family: inherit;
-      font-size: 10.5px;
-      font-weight: 700;
-      cursor: pointer;
-      color: var(--text2);
-      transition: all .15s;
-    }
-    .format-pill:hover { border-color: var(--text); color: var(--text); }
-    .format-pill.selected { background: var(--text); color: #fff; border-color: var(--text); }
+/* ── Result area ── */
+.result-area { flex: 1; display: flex; flex-direction: column; }
+.result-hero {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 32px; position: relative;
+}
+.result-hero-empty {
+  text-align: center; color: var(--txt3);
+}
+.result-hero-empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+.result-hero-empty-title { font-size: 14px; color: var(--txt3); }
+.result-img-wrap { max-width: 100%; max-height: 100%; position: relative; }
+.result-img { max-width: 100%; max-height: 70vh; border-radius: var(--radius2); display: block; }
+.result-actions {
+  padding: 16px 32px; border-top: 1px solid var(--border);
+  background: var(--bg2); display: flex; gap: 8px; flex-wrap: wrap;
+  align-items: center;
+}
 
-    /* ─── SAFE FRAME INDICATOR ───────────────────────────────── */
-    .safeframe-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      user-select: none;
-    }
+/* Loading state */
+.loading-wrap {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 60px;
+}
+.loading-spinner {
+  width: 36px; height: 36px; border: 2px solid var(--border2);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--txt2); }
+.loading-sub { font-size: 12px; color: var(--txt3); }
 
-    /* ─── UPDATE BADGE ───────────────────────────────────────── */
-    #update-badge {
-      display: none;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 14px;
-      background: #e3f2fd;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      font-weight: 700;
-      color: #1565c0;
-      cursor: pointer;
-    }
-    #update-badge.visible { display: flex; }
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  z-index: 9999; pointer-events: none; opacity: 0;
+  transition: opacity 0.2s; max-width: 400px; text-align: center;
+}
+#toast.show { opacity: 1; }
+#toast.success { background: #166534; color: #bbf7d0; border: 1px solid #15803d; }
+#toast.error { background: #7f1d1d; color: #fca5a5; border: 1px solid #991b1b; }
+#toast.info { background: var(--bg4); color: var(--txt); border: 1px solid var(--border2); }
 
-    /* ─── PROGRESSO RENDER ───────────────────────────────────── */
-    .render-progress {
-      display: none;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .render-progress.visible { display: flex; }
-    .progress-bar-wrap {
-      height: 4px;
-      background: var(--bg2);
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%;
-      background: var(--text);
-      border-radius: 2px;
-      width: 0%;
-      transition: width .3s ease;
-    }
-    .progress-label { font-size: 10px; color: var(--text3); font-weight: 600; }
-  </style>
+/* Modal */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center; z-index: 1000;
+  display: none;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--radius2); width: 480px; max-width: 95vw; max-height: 90vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.modal-head { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 16px; font-weight: 700; color: #fff; }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* Settings modal */
+.settings-field { margin-bottom: 18px; }
+.settings-label { font-size: 12px; font-weight: 600; color: var(--txt2); margin-bottom: 6px; display: block; }
+.settings-desc { font-size: 12px; color: var(--txt3); margin-top: 4px; line-height: 1.5; }
+.settings-input-row { display: flex; gap: 8px; }
+.key-input { flex: 1; font-family: monospace; font-size: 12px; }
+.link { color: var(--blue); text-decoration: none; font-size: 12px; }
+.link:hover { text-decoration: underline; }
+
+/* Account */
+.account-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.account-row:last-child { border-bottom: none; }
+.account-key { font-size: 13px; color: var(--txt2); }
+.account-val { font-size: 13px; color: var(--txt); font-weight: 500; }
+.status-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+.status-active { background: #14532d; color: #86efac; }
+
+/* ── Viewport capture panel (inside criar) ── */
+.capture-panel {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius2); margin: 20px; padding: 16px;
+}
+.capture-panel-title { font-size: 13px; font-weight: 600; color: var(--txt); margin-bottom: 12px; }
+.capture-formats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.fmt-btn {
+  padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600;
+  border: 1px solid var(--border2); background: var(--bg3); color: var(--txt3);
+  cursor: pointer; transition: all 0.12s;
+}
+.fmt-btn:hover { color: var(--txt); }
+.fmt-btn.active { border-color: #fff; color: #fff; }
+.capture-preview {
+  aspect-ratio: 16/9; background: var(--bg3); border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--txt3); font-size: 12px; overflow: hidden; margin-bottom: 12px;
+}
+.capture-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius); }
+
+/* Before/After slider */
+.before-after-wrap { position: relative; overflow: hidden; border-radius: var(--radius2); cursor: ew-resize; user-select: none; }
+.before-after-img { position: absolute; inset: 0; }
+.before-after-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.before-after-divider { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; left: 50%; cursor: ew-resize; }
+.before-after-handle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #000; font-size: 12px; cursor: ew-resize; }
+.ba-label { position: absolute; bottom: 8px; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: rgba(0,0,0,0.6); color: #fff; }
+.ba-label-before { left: 8px; }
+.ba-label-after { right: 8px; }
+
+/* Video section */
+.video-preview { width: 100%; border-radius: var(--radius2); background: var(--bg3); aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; color: var(--txt3); font-size: 13px; overflow: hidden; }
+.video-preview video { width: 100%; border-radius: var(--radius2); }
+
+/* Pós-produção sliders */
+.pp-group-title { font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: 0.06em; margin: 14px 0 10px; }
+.pp-slider-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pp-label { font-size: 12px; color: var(--txt2); width: 90px; flex-shrink: 0; }
+.pp-input { flex: 1; }
+.pp-val { font-size: 12px; color: var(--txt3); width: 28px; text-align: right; }
+
+/* ── API Keys in criar ── */
+.api-key-notice {
+  margin: 20px; padding: 14px 16px; border-radius: var(--radius);
+  background: var(--bg3); border: 1px solid var(--border2);
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.api-key-notice-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.api-key-notice-text { font-size: 12px; color: var(--txt2); line-height: 1.5; }
+.api-key-notice-text a { color: var(--blue); text-decoration: none; }
+.api-key-notice-text a:hover { text-decoration: underline; }
+
+/* Comparison view */
+.compare-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 20px; }
+.compare-side { display: flex; flex-direction: column; gap: 6px; }
+.compare-label { font-size: 11px; font-weight: 700; color: var(--txt3); text-transform: uppercase; letter-spacing: 0.06em; }
+.compare-img { width: 100%; border-radius: var(--radius2); display: block; }
+
+/* Notification bar */
+.notif-bar {
+  padding: 8px 20px; background: #1a1a00; border-bottom: 1px solid #333300;
+  font-size: 12px; color: #fef08a; display: flex; align-items: center;
+  justify-content: space-between; flex-shrink: 0;
+}
+.notif-bar a { color: #fde047; text-decoration: underline; cursor: pointer; }
+.notif-close { background: none; border: none; color: #fef08a; cursor: pointer; font-size: 16px; padding: 0 4px; }
+
+/* ── Page: Conta ── */
+#page-conta { padding: 28px 32px; max-width: 640px; gap: 24px; }
+.conta-section { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); overflow: hidden; }
+.conta-section-head { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.conta-section-title { font-size: 14px; font-weight: 700; color: #fff; }
+.conta-section-body { padding: 8px 0; }
+
+/* ── Misc ── */
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+.tag { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; border: 1px solid var(--border2); color: var(--txt3); }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-8 { gap: 8px; }
+.flex { display: flex; align-items: center; }
+.ml-auto { margin-left: auto; }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 11px; }
+.color-muted { color: var(--txt3); }
+.color-txt2 { color: var(--txt2); }
+.fw700 { font-weight: 700; }
+.mt4 { margin-top: 4px; }
+.mt8 { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  nav { padding: 0 12px; }
+  #page-dashboard { padding: 16px; }
+  .criar-sidebar { width: 100%; }
+  #page-criar { flex-direction: column; }
+}
+
+/* ── ANIMATIONS ── */
+.fade-in { animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+</style>
 </head>
 <body>
 <div id="app">
-  <!-- SIDEBAR -->
-  <nav id="sidebar">
-    <div class="sidebar-logo">
-      <span>LAVI<sub>render</sub></span>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">laviAI.</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="goPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="goPage('cenas')">Cenas</button>
+    <button class="nav-tab" onclick="goPage('criar')">Criar</button>
+  </div>
+  <div class="nav-right">
+    <div class="nav-credits" onclick="openModal('modal-conta')">
+      <span>🔑</span>
+      <strong id="nav-credits-val">API</strong>
     </div>
-    <div class="sidebar-nav">
-      <div class="nav-section">Principal</div>
-      <div class="nav-item active" data-page="render">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="18" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
-        </svg>
-        <span>Render</span>
+    <button class="nav-btn" onclick="openModal('modal-conta')">Conta</button>
+  </div>
+</nav>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="page-dashboard" class="page active">
+  <div class="dash-header">
+    <div>
+      <div class="dash-title">Recentes</div>
+      <div class="dash-subtitle">Histórico das gerações deste projeto. Salvo na <strong>pasta do projeto</strong>.</div>
+    </div>
+    <div class="dash-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-select-all" onclick="toggleSelectAll()">Selecionar todos</button>
+      <button class="btn btn-danger btn-sm" id="btn-delete-sel" style="display:none" onclick="deleteSelected()">Apagar (0)</button>
+      <button class="btn btn-white btn-sm" onclick="goPage('criar')">+ Criar</button>
+    </div>
+  </div>
+
+  <div id="dash-content">
+    <div class="dash-empty">
+      <div class="dash-empty-icon">🖼</div>
+      <div class="dash-empty-title">Nenhuma imagem ainda</div>
+      <div class="dash-empty-text">Clique em <strong>Criar</strong> para gerar sua primeira imagem.<br>As imagens aparecem aqui após serem geradas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CENAS ═══ -->
+<div id="page-cenas" class="page">
+  <div class="cenas-header">
+    <div>
+      <div class="dash-title">Cenas</div>
+      <div class="dash-subtitle" style="margin-top:4px">Capturas de viewport salvas para usar como base de geração.</div>
+    </div>
+    <button class="btn btn-white btn-sm" onclick="captureViewport()">Capturar viewport</button>
+  </div>
+
+  <div class="capture-panel fade-in">
+    <div class="capture-panel-title">Capturar viewport do SketchUp</div>
+    <div class="capture-formats">
+      <button class="fmt-btn active" onclick="setFmt(this,'16:9')">16:9</button>
+      <button class="fmt-btn" onclick="setFmt(this,'4:3')">4:3</button>
+      <button class="fmt-btn" onclick="setFmt(this,'1:1')">1:1</button>
+      <button class="fmt-btn" onclick="setFmt(this,'4:5')">4:5</button>
+      <button class="fmt-btn" onclick="setFmt(this,'3:4')">3:4</button>
+      <button class="fmt-btn" onclick="setFmt(this,'9:16')">9:16</button>
+      <button class="fmt-btn" onclick="setFmt(this,'viewport')">Seguir viewport</button>
+    </div>
+    <div class="capture-preview" id="capture-preview-thumb">
+      <span>Preview aparece aqui após capturar</span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div class="toggle-row" style="gap:8px;flex:1">
+        <span class="toggle-label" style="font-size:12px">Estilo IA</span>
+        <div class="toggle" id="toggle-ai-style" onclick="this.classList.toggle('on')"></div>
       </div>
-      <div class="nav-item" data-page="cenas">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-          <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-        </svg>
-        <span>Cenas</span>
+      <button class="btn btn-white btn-sm" onclick="captureViewport()" style="flex:1">Capturar para LAVI</button>
+    </div>
+  </div>
+
+  <div id="cenas-grid" class="cenas-grid" style="padding:0 20px 20px">
+    <div class="cenas-empty" style="grid-column:1/-1">
+      <div style="font-size:32px;margin-bottom:10px;opacity:0.3">📷</div>
+      <div style="font-size:13px;color:var(--txt3)">Nenhuma cena capturada ainda.</div>
+      <div style="font-size:12px;color:var(--txt3);margin-top:4px">Clique em <strong>Capturar viewport</strong> para começar.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CRIAR ═══ -->
+<div id="page-criar" class="page">
+  <!-- Left sidebar: tool selector + form -->
+  <div class="criar-sidebar">
+
+    <!-- Stepper -->
+    <div class="stepper">
+      <div class="step done" id="step1">
+        <div class="step-num">✓</div>
+        <span>Upload</span>
       </div>
-      <div class="nav-item" data-page="galeria">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
-          <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-        </svg>
-        <span>Galeria</span>
+      <div class="step-arrow">›</div>
+      <div class="step active" id="step2">
+        <div class="step-num">2</div>
+        <span>Configurar</span>
       </div>
-      <div class="nav-item" data-page="360">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"/>
-          <ellipse cx="12" cy="12" rx="4" ry="10"/>
-          <path d="M2 12h20"/>
-        </svg>
-        <span>Tour 360°</span>
+      <div class="step-arrow">›</div>
+      <div class="step" id="step3">
+        <div class="step-num">3</div>
+        <span>Gerar</span>
       </div>
-      <div class="nav-section" style="margin-top:8px">Ferramentas</div>
-      <div class="nav-item" data-action="cleanup">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/>
-        </svg>
-        <span>Limpeza</span>
-      </div>
-      <div class="nav-item" data-page="config">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="3"/>
-          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-        </svg>
-        <span>Configurações</span>
+      <div class="step-arrow">›</div>
+      <div class="step" id="step4">
+        <div class="step-num">4</div>
+        <span>Resultados</span>
       </div>
     </div>
-    <div class="sidebar-footer">
-      <div class="sidebar-version">LAVI Render v4.0</div>
-    </div>
-  </nav>
 
-  <!-- MAIN -->
-  <div id="main">
-    <!-- TOPBAR -->
-    <div class="topbar">
-      <div class="topbar-title" id="topbar-title">Render</div>
-      <div class="topbar-skp" id="topbar-skp" title="Arquivo SketchUp atual">Nenhum arquivo aberto</div>
-      <div id="update-badge" onclick="requestUpdate()">↑ Atualização disponível</div>
-      <button class="topbar-btn" onclick="requestCameraCheck()">↺ Atualizar viewport</button>
-    </div>
-
-    <!-- ── PÁGINA: RENDER ─────────────────────────────────── -->
-    <div class="page active" id="page-render">
-      <div class="render-canvas-area" id="canvas-area">
-        <div class="render-placeholder" id="render-placeholder">
-          <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="8" y="8" width="48" height="36" rx="4" stroke="#1c1c1c" stroke-width="2"/>
-            <circle cx="22" cy="22" r="5" stroke="#1c1c1c" stroke-width="2"/>
-            <path d="M8 35l14-12 10 10 8-8 14 12" stroke="#1c1c1c" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M24 56h16M32 44v12" stroke="#1c1c1c" stroke-width="2"/>
-          </svg>
-          <p>Capture a viewport para gerar um render</p>
+    <!-- Tool selector -->
+    <div class="tool-selector">
+      <div class="tool-selector-title">O que você quer fazer?</div>
+      <div class="tool-grid">
+        <div class="tool-card active" onclick="selectTool(this,'render')" data-tool="render">
+          <div class="tool-card-name">Imagem a partir de print</div>
+          <div class="tool-card-desc">Print 3D → imagem fotorrealista</div>
         </div>
-        <img id="render-preview" src="" alt="Render">
-      </div>
-
-      <div class="render-panel">
-        <!-- Captura -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Captura</div>
-          <div class="capture-thumb-wrap">
-            <img id="capture-thumb" src="" alt="">
-            <div class="capture-empty" id="capture-empty">Sem captura</div>
-          </div>
-          <button class="capture-btn" onclick="captureViewport()">📷 Capturar viewport</button>
+        <div class="tool-card" onclick="selectTool(this,'edit')" data-tool="edit">
+          <div class="tool-card-name">Editar imagem</div>
+          <div class="tool-card-desc">Troque cores, materiais, móveis</div>
         </div>
-
-        <!-- Safe Frame -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Proporção</div>
-          <div class="format-pills" id="format-pills">
-            <button class="format-pill selected" data-fmt="16:9">16:9</button>
-            <button class="format-pill" data-fmt="9:16">9:16</button>
-            <button class="format-pill" data-fmt="4:3">4:3</button>
-            <button class="format-pill" data-fmt="4:5">4:5</button>
-            <button class="format-pill" data-fmt="1:1">1:1</button>
-            <button class="format-pill" data-fmt="viewport">Viewport</button>
-          </div>
-          <div class="toggle-row">
-            <span>Safe frame</span>
-            <div class="toggle" id="toggle-safeframe" onclick="toggleSafeFrame()"></div>
-          </div>
-          <div class="toggle-row">
-            <span>Estilo IA</span>
-            <div class="toggle" id="toggle-ai-style" onclick="toggleAiStyle()"></div>
-          </div>
+        <div class="tool-card" onclick="selectTool(this,'humanize')" data-tool="humanize">
+          <div class="tool-card-name">Humanizar</div>
+          <div class="tool-card-desc">Adicione pessoas ao ambiente</div>
         </div>
-
-        <!-- Qualidade -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Qualidade</div>
-          <select class="rpanel-select" id="sel-qualidade">
-            <option value="2K">2K — Rápido</option>
-            <option value="4K" selected>4K — Recomendado</option>
-            <option value="8K">8K — Máximo</option>
-          </select>
+        <div class="tool-card" onclick="selectTool(this,'improve')" data-tool="improve">
+          <div class="tool-card-name">Melhorar render</div>
+          <div class="tool-card-desc">CGI → fotografia realista</div>
         </div>
-
-        <!-- Ambiente -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Ambiente</div>
-          <select class="rpanel-select" id="sel-ambiente">
-            <option value="dia">Dia</option>
-            <option value="noite">Noite</option>
-            <option value="entardecer">Entardecer</option>
-            <option value="manha">Manhã</option>
-            <option value="nublado">Nublado</option>
-          </select>
+        <div class="tool-card" onclick="selectTool(this,'multiply')" data-tool="multiply">
+          <div class="tool-card-name">Multiplicar imagem</div>
+          <div class="tool-card-desc">Gere variações da mesma imagem</div>
         </div>
-
-        <!-- Estilo -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Estilo visual</div>
-          <select class="rpanel-select" id="sel-estilo">
-            <option value="fotorrealista">Fotorrealista</option>
-            <option value="minimalista">Minimalista</option>
-            <option value="warm">Warm &amp; Aconchegante</option>
-            <option value="moderno">Moderno &amp; Clean</option>
-            <option value="nordico">Nórdico</option>
-            <option value="biofilia">Biofilia</option>
-            <option value="industrial">Industrial</option>
-          </select>
+        <div class="tool-card" onclick="selectTool(this,'detail')" data-tool="detail">
+          <div class="tool-card-name">Gerar detalhes</div>
+          <div class="tool-card-desc">Close-ups de áreas específicas</div>
         </div>
-
-        <!-- Prompt extra -->
-        <div class="rpanel-section">
-          <div class="rpanel-label">Detalhes extras <span style="font-weight:500;color:var(--text3)">(opcional)</span></div>
-          <textarea class="rpanel-textarea" id="prompt-extra" placeholder="Ex: flores sobre a mesa, luz de tarde, almofadas terrosas..."></textarea>
+        <div class="tool-card" onclick="selectTool(this,'video')" data-tool="video">
+          <div class="tool-card-name">Vídeo</div>
+          <div class="tool-card-desc">Anime com movimento cinematográfico</div>
         </div>
-
-        <!-- Progresso -->
-        <div class="render-progress" id="render-progress">
-          <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
-          <div class="progress-label" id="progress-label">Preparando...</div>
+        <div class="tool-card" onclick="selectTool(this,'upscale')" data-tool="upscale">
+          <div class="tool-card-name">Upscale</div>
+          <div class="tool-card-desc">Aumente a resolução em 2x ou 4x</div>
         </div>
-
-        <!-- Botões de ação -->
-        <div class="rpanel-section" style="gap:8px">
-          <button class="render-btn" id="btn-render" onclick="startRender()">Gerar render</button>
-          <div style="display:flex;gap:8px">
-            <button class="capture-btn" id="btn-save" onclick="saveRender()" style="display:none">⬇ Salvar</button>
-            <button class="capture-btn" id="btn-upscale" onclick="upscaleRender()" style="display:none">✦ Upscale 4K</button>
-          </div>
+        <div class="tool-card" onclick="selectTool(this,'pp')" data-tool="pp">
+          <div class="tool-card-name">Pós-produção</div>
+          <div class="tool-card-desc">Ajuste exposição, cor e tonalidade</div>
         </div>
       </div>
     </div>
 
-    <!-- ── PÁGINA: CENAS ──────────────────────────────────── -->
-    <div class="page" id="page-cenas">
-      <div class="cenas-toolbar">
-        <button class="topbar-btn primary" onclick="addScene()">+ Nova cena</button>
-        <button class="topbar-btn" onclick="importScenes()">Importar cenas do SketchUp</button>
-        <button class="topbar-btn" onclick="refreshAllThumbs()">↺ Atualizar miniaturas</button>
-        <div style="flex:1"></div>
-        <button class="topbar-btn" onclick="deleteAllScenes()" style="color:#c0392b">Limpar tudo</button>
-      </div>
-      <div id="cenas-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-        <div class="empty-state" id="cenas-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-            <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-          </svg>
-          <h3>Nenhuma cena salva</h3>
-          <p>Salve cenas do seu projeto para organizar<br>diferentes ângulos e gerar renders individuais.</p>
-          <button class="topbar-btn primary" onclick="addScene()" style="margin-top:8px">+ Nova cena</button>
+    <!-- Upload zone -->
+    <div id="upload-section">
+      <div class="upload-zone" id="upload-zone" onclick="triggerUpload()" ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="this.classList.remove('drag')">
+        <div class="upload-zone-icon">⬆</div>
+        <div class="upload-zone-title">Arraste seu print aqui</div>
+        <div class="upload-zone-sub">Ou clique para selecionar. Aceita prints do SketchUp, Revit, Rhino, Blender, ArchiCAD.</div>
+        <div class="upload-zone-exts">
+          <span class="ext-badge">PNG</span>
+          <span class="ext-badge">JPG</span>
+          <span class="ext-badge">JPEG</span>
         </div>
-        <div class="cenas-grid" id="cenas-grid" style="display:none"></div>
       </div>
-    </div>
+      <input type="file" id="file-input" accept=".png,.jpg,.jpeg" style="display:none" onchange="onFileSelect(event)">
 
-    <!-- ── PÁGINA: GALERIA ────────────────────────────────── -->
-    <div class="page" id="page-galeria">
-      <div class="gallery-filters">
-        <select class="rpanel-select" id="gal-filter" style="width:auto;min-width:160px" onchange="filterGallery()">
-          <option value="all">Todos os renders</option>
-          <option value="foto">Fotorrealista</option>
-          <option value="video">Vídeos</option>
-          <option value="upscale">Upscale</option>
-        </select>
-        <div style="flex:1"></div>
-        <button class="topbar-btn" onclick="openProjectFolder()">📁 Abrir pasta</button>
-      </div>
-      <div id="galeria-content" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
-        <div class="empty-state" id="galeria-empty">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/>
-            <circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
-          </svg>
-          <h3>Nenhum render ainda</h3>
-          <p>Seus renders aparecem aqui automaticamente<br>após serem gerados.</p>
-        </div>
-        <div class="gallery-grid" id="gallery-grid" style="display:none"></div>
-      </div>
-    </div>
-
-    <!-- ── PÁGINA: 360° ───────────────────────────────────── -->
-    <div class="page" id="page-360">
-      <div class="pano-area">
-        <div class="pano-preview">
-          <img id="pano-img" src="" alt="">
-          <div class="pano-empty" id="pano-empty">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <circle cx="12" cy="12" r="10"/>
-              <ellipse cx="12" cy="12" rx="4" ry="10"/>
-              <path d="M2 12h20"/>
-            </svg>
-            <span>Capture um panorama 360°</span>
+      <div class="upload-sources">
+        <div class="source-btn" onclick="captureViewport()">
+          <div class="source-btn-icon">📷</div>
+          <div>
+            <div class="source-btn-text">Capturar viewport</div>
+            <div class="source-btn-sub">Tira print da vista atual do SketchUp. Re-exporta em 4K ao gerar.</div>
           </div>
         </div>
-        <div class="pano-controls">
-          <div class="rpanel-section">
-            <div class="rpanel-label">Resolução</div>
-            <select class="rpanel-select" id="sel-pano-res">
-              <option value="2K">2K</option>
-              <option value="4K" selected>4K</option>
-              <option value="8K">8K</option>
-            </select>
+        <div class="source-btn" onclick="useSavedCapture()">
+          <div class="source-btn-icon">🗂</div>
+          <div>
+            <div class="source-btn-text">Escolher captura</div>
+            <div class="source-btn-sub">Use uma captura que você já salvou na aba Cenas.</div>
           </div>
-          <div class="toggle-row">
-            <span>Aplicar estilo IA</span>
-            <div class="toggle" id="toggle-pano-ai" onclick="togglePanoAi()"></div>
-          </div>
-          <button class="render-btn" onclick="capturePanorama()">Capturar 360°</button>
-          <button class="capture-btn" id="btn-save-pano" onclick="savePanorama()" style="display:none">⬇ Salvar panorama</button>
         </div>
       </div>
     </div>
 
-    <!-- ── PÁGINA: CONFIGURAÇÕES ──────────────────────────── -->
-    <div class="page" id="page-config">
-      <div class="config-body">
-        <h2 style="font-size:16px;font-weight:800">Configurações</h2>
-
-        <!-- Google AI Studio -->
-        <div class="config-section">
-          <div class="config-section-title">Google AI Studio</div>
-          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
-            Use sua própria chave da <a href="https://aistudio.google.com" target="_blank" style="color:var(--text);font-weight:700">Google AI Studio</a> para gerar renders.
-            Acesso gratuito com cota generosa. <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--text);font-weight:700">Gerar chave →</a>
-          </p>
-          <div class="config-row">
-            <div>
-              <div class="config-row-label">Chave de API (Google)</div>
-              <div class="config-row-sub">Começa com "AIza..."</div>
-            </div>
-            <span class="key-status empty" id="google-key-status">Não configurada</span>
-          </div>
-          <div style="display:flex;gap:8px">
-            <input type="password" class="config-input" id="input-google-key" placeholder="AIzaSy..." style="flex:1;max-width:100%">
-            <button class="config-save" onclick="saveGoogleKey()">Salvar</button>
-          </div>
+    <!-- Image preview (hidden until upload) -->
+    <div id="img-preview-section" style="display:none">
+      <div class="img-preview-wrap">
+        <img id="img-preview-el" class="img-preview" src="" alt="Preview">
+        <div class="img-preview-actions">
+          <button class="btn btn-ghost btn-sm" onclick="clearImage()">✕ Remover</button>
+          <button class="btn btn-ghost btn-sm" onclick="triggerUpload()">↑ Trocar</button>
         </div>
+      </div>
+    </div>
 
-        <!-- Pasta de projeto -->
-        <div class="config-section">
-          <div class="config-section-title">Pasta do projeto</div>
-          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
-            Renders e capturas são salvos em uma pasta ao lado do arquivo .skp aberto.
-          </p>
-          <div class="config-row">
-            <div>
-              <div class="config-row-label">Pasta atual</div>
-              <div class="config-row-sub" id="folder-path-display" style="word-break:break-all;max-width:280px">Não configurada</div>
-            </div>
-            <button class="topbar-btn" onclick="pickFolder()">Escolher</button>
-          </div>
-        </div>
+    <!-- Dynamic form (changes per tool) -->
+    <div id="tool-form"></div>
 
-        <!-- Preferências visuais -->
-        <div class="config-section">
-          <div class="config-section-title">Interface</div>
-          <div class="toggle-row">
-            <span>Modo compacto (1 coluna)</span>
-            <div class="toggle" id="toggle-compact" onclick="toggleCompact()"></div>
-          </div>
-          <div class="toggle-row">
-            <span>Safe frame no SketchUp</span>
-            <div class="toggle" id="toggle-sf-config"></div>
-          </div>
-        </div>
+    <!-- Generate area -->
+    <div class="gen-area">
+      <div class="gen-prompt-wrap">
+        <textarea class="gen-prompt" id="gen-prompt" placeholder="Edite livremente antes de gerar a imagem…" rows="3"></textarea>
+        <button class="gen-lang-btn">PT</button>
+      </div>
 
-        <!-- Sobre -->
-        <div class="config-section">
-          <div class="config-section-title">Sobre o LAVI Render</div>
-          <p style="font-size:11.5px;color:var(--text2);line-height:1.6">
-            Versão <b style="color:var(--text)">4.0.0</b> — Acesso vitalício, sem assinatura.
-            <br>Render via Google Gemini (BYOK — chave própria).
-          </p>
+      <div id="quality-row" class="gen-row">
+        <div class="gen-quality" id="gen-quality">
+          <button class="quality-btn" onclick="setQuality(this,'1K')">1K</button>
+          <button class="quality-btn active" onclick="setQuality(this,'2K')">2K</button>
+          <button class="quality-btn" onclick="setQuality(this,'4K')">4K</button>
         </div>
+        <button class="gen-btn" id="gen-btn" onclick="generate()">
+          Gerar
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right: result -->
+  <div class="criar-main">
+    <div class="result-area">
+      <div class="result-hero" id="result-hero">
+        <div class="result-hero-empty">
+          <div class="result-hero-empty-icon">✨</div>
+          <div class="result-hero-empty-title">Configure e clique em Gerar</div>
+        </div>
+      </div>
+      <div class="result-actions" id="result-actions" style="display:none">
+        <button class="btn btn-ghost btn-sm" onclick="saveToProject()">💾 Salvar na dash</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadResult()">⬇ Baixar</button>
+        <button class="btn btn-ghost btn-sm" onclick="editResult()">✏️ Editar imagem</button>
+        <button class="btn btn-ghost btn-sm" onclick="multiplyResult()">⊕ Multiplicar</button>
+        <button class="btn btn-ghost btn-sm" onclick="upscaleResult()">↑ Upscale</button>
+        <button class="btn btn-ghost btn-sm" onclick="pp()">🎨 Pós-produção</button>
+        <button class="btn btn-primary btn-sm ml-auto" onclick="generate()">↺ Gerar novamente</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- MODAIS / OVERLAYS -->
-<div id="modal-overlay">
-  <div class="modal-box">
-    <div class="modal-title" id="modal-title"></div>
-    <div class="modal-body" id="modal-body"></div>
-    <div class="modal-footer" id="modal-footer"></div>
+<!-- ═══ CONTA PAGE (modal) ═══ -->
+<div class="modal-overlay" id="modal-conta">
+  <div class="modal" style="width:560px">
+    <div class="modal-head" style="display:flex;align-items:center;justify-content:space-between">
+      <div class="modal-title">Configurações</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-conta')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0">
+      <div style="border-bottom:1px solid var(--border)">
+        <div style="display:flex;gap:2px;padding:12px 20px">
+          <button class="quality-btn active" onclick="switchTab(this,'tab-apis')">Chaves de API</button>
+          <button class="quality-btn" onclick="switchTab(this,'tab-conta')">Conta</button>
+        </div>
+      </div>
+
+      <!-- Tab: APIs -->
+      <div id="tab-apis" style="padding:20px;display:flex;flex-direction:column;gap:20px">
+
+        <div class="settings-field">
+          <label class="settings-label">🤖 Google AI Studio (Gemini) — imagens</label>
+          <div class="settings-input-row">
+            <input type="password" class="key-input" id="input-google-key" placeholder="AIzaSy..." autocomplete="off">
+            <button class="btn btn-ghost btn-sm" onclick="testGoogleKey()">Testar</button>
+            <button class="btn btn-white btn-sm" onclick="saveGoogleKey()">Salvar</button>
+          </div>
+          <div class="settings-desc">
+            Chave fica salva localmente. Paga direto ao Google por uso.
+            <br><a class="link" href="https://aistudio.google.com/apikey" target="_blank">→ Criar chave no Google AI Studio</a>
+          </div>
+          <div id="google-key-status" style="margin-top:6px;font-size:12px"></div>
+        </div>
+
+        <div style="height:1px;background:var(--border)"></div>
+
+        <div class="settings-field">
+          <label class="settings-label">🎬 Runway — vídeos</label>
+          <div class="settings-input-row">
+            <input type="password" class="key-input" id="input-runway-key" placeholder="key_..." autocomplete="off">
+            <button class="btn btn-ghost btn-sm" onclick="testRunwayKey()">Testar</button>
+            <button class="btn btn-white btn-sm" onclick="saveRunwayKey()">Salvar</button>
+          </div>
+          <div class="settings-desc">
+            Chave para geração de vídeos via Runway ML.
+            <br><a class="link" href="https://app.runwayml.com/settings" target="_blank">→ Obter chave Runway</a>
+          </div>
+          <div id="runway-key-status" style="margin-top:6px;font-size:12px"></div>
+        </div>
+
+      </div>
+
+      <!-- Tab: Conta -->
+      <div id="tab-conta" style="padding:20px;display:none">
+        <div class="conta-section">
+          <div class="conta-section-head"><div class="conta-section-title">LAVI AI</div></div>
+          <div class="conta-section-body">
+            <div class="account-row" style="padding:10px 20px">
+              <span class="account-key">Status</span>
+              <span class="status-badge status-active">ATIVO — vitalício</span>
+            </div>
+            <div class="account-row" style="padding:10px 20px">
+              <span class="account-key">Modo</span>
+              <span class="account-val">BYOK — sua própria chave</span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:16px">
+          <a class="link" href="#" onclick="openModal('modal-termos')">Termos de uso</a>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
-<div id="lightbox">
-  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt="">
-</div>
+<!-- Toast -->
+<div id="toast"></div>
 
-<div id="loading-overlay">
-  <div class="loading-spinner"></div>
-  <div class="loading-msg" id="loading-msg">Aguarde...</div>
-</div>
-
-<div id="toast-container"></div>
-
+<!-- ═══ SCRIPTS ═══ -->
 <script>
-// ═══════════════════════════════════════════════════════════════
-// LAVI Render — app.html
-// Site externo que roda dentro do iframe do plugin SketchUp.
-// Comunicação via postMessage (plugin panel.html ↔ este app).
-// ═══════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════
+//  LAVI AI — idêntico ao HEMY AI
+//  Motor: Gemini (imagens) + Runway (vídeos)
+//  Bridge: window.sketchup.* → SketchUp callbacks
+// ════════════════════════════════════════════════
 
-// ─── ESTADO ───────────────────────────────────────────────────
-const state = {
-  currentPage: 'render',
-  skpFilename: '',
-  captureDataUrl: null,
+// ── STATE ──────────────────────────────────────
+const STATE = {
+  tool: 'render',
+  quality: '2K',
+  currentImage: null,       // base64 data URL atual
+  currentResult: null,      // última imagem gerada
   captureFormat: '16:9',
-  renderDataUrl: null,
-  panoDataUrl: null,
-  panoApplyAi: false,
-  safeFrameOn: false,
-  aiStyleOn: false,
-  compact: false,
-  googleKey: localStorage.getItem('lavi_google_key') || '',
-  projectFolder: null,
-  scenes: [],        // lista de cenas salvas (Pages do .skp)
-  galleryItems: [],  // histórico de renders
-  captures: [],      // capturas (aba Cenas)
-  isRendering: false,
-  updateAvailable: false,
+  history: [],              // [{ id, dataUrl, thumb, prompt, tool, ts }]
+  captures: [],             // cenas salvas
+  googleKey: '',
+  runwayKey: '',
+  generating: false,
+  selectedCards: new Set(),
 };
 
-// ─── PLUGIN BRIDGE ────────────────────────────────────────────
-// Detecta se rodando dentro do HtmlDialog do SketchUp (tem parent)
-// ou num browser normal (dev mode sem plugin).
-const IS_PLUGIN = window.parent !== window;
+// ── STORAGE ────────────────────────────────────
+function loadKeys() {
+  STATE.googleKey = localStorage.getItem('lavi_google_key') || '';
+  STATE.runwayKey = localStorage.getItem('lavi_runway_key') || '';
+  if (STATE.googleKey) document.getElementById('input-google-key').value = STATE.googleKey;
+  if (STATE.runwayKey) document.getElementById('input-runway-key').value = STATE.runwayKey;
+  updateKeyStatus();
+}
 
-function toPlugin(type, payload) {
-  if (IS_PLUGIN) {
-    window.parent.postMessage({ type, payload: payload || {} }, '*');
+function saveGoogleKey() {
+  const v = document.getElementById('input-google-key').value.trim();
+  STATE.googleKey = v;
+  localStorage.setItem('lavi_google_key', v);
+  updateKeyStatus();
+  toast('Chave Google salva', 'success');
+}
+
+function saveRunwayKey() {
+  const v = document.getElementById('input-runway-key').value.trim();
+  STATE.runwayKey = v;
+  localStorage.setItem('lavi_runway_key', v);
+  updateKeyStatus();
+  toast('Chave Runway salva', 'success');
+}
+
+function updateKeyStatus() {
+  const gEl = document.getElementById('google-key-status');
+  const rEl = document.getElementById('runway-key-status');
+  if (gEl) gEl.textContent = STATE.googleKey ? '✅ Chave configurada' : '⚠️ Chave não configurada';
+  if (gEl) gEl.style.color = STATE.googleKey ? 'var(--green)' : 'var(--yellow)';
+  if (rEl) rEl.textContent = STATE.runwayKey ? '✅ Chave configurada' : '⚠️ Chave não configurada (vídeos indisponíveis)';
+  if (rEl) rEl.style.color = STATE.runwayKey ? 'var(--green)' : 'var(--txt3)';
+}
+
+// ── PAGES ──────────────────────────────────────
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = {dashboard:0, cenas:1, criar:2};
+  if (map[name] !== undefined) tabs[map[name]].classList.add('active');
+  if (name === 'criar') renderToolForm();
+}
+
+// ── MODALS ─────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function switchTab(btn, tabId) {
+  btn.closest('.modal').querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const modal = btn.closest('.modal');
+  modal.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+  document.getElementById(tabId).style.display = '';
+}
+
+// ── TOOLS ──────────────────────────────────────
+function selectTool(el, tool) {
+  document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  STATE.tool = tool;
+  renderToolForm();
+  // Show/hide quality row
+  const qRow = document.getElementById('quality-row');
+  if (tool === 'video' || tool === 'pp' || tool === 'upscale') {
+    if (tool !== 'upscale') qRow.querySelector('#gen-quality').style.display = 'none';
   } else {
-    console.log('[LAVI→plugin]', type, payload);
+    document.getElementById('gen-quality').style.display = '';
   }
 }
 
-// ─── RECEBE MENSAGENS DO PLUGIN (panel.html → postMessage) ────
-window.addEventListener('message', (e) => {
-  const msg = e.data;
-  if (!msg || typeof msg !== 'object') return;
-  switch (msg.type) {
-    case 'hemy.context.skp':
-      handleSkpContext(msg.payload);
-      break;
-    case 'hemy.pages.list.deliver':
-      handlePagesList(msg.payload);
-      break;
-    case 'hemy.pages.render.deliver':
-      handlePageRender(msg.payload);
-      break;
-    case 'hemy.viewport.captured':
-      handleViewportCaptured(msg.payload);
-      break;
-    case 'hemy.viewport.cameraSig.deliver':
-      // usado para detectar mudança de câmera
-      break;
-    case 'hemy.capture.list.deliver':
-      handleCapturesList(msg.payload);
-      break;
-    case 'hemy.capture.saved':
-      handleCaptureSaved(msg.payload);
-      break;
-    case 'hemy.capture.deleted':
-      toast('Captura removida.');
-      loadCaptures();
-      break;
-    case 'hemy.project.list.deliver':
-      handleGalleryList(msg.payload);
-      break;
-    case 'hemy.project.saveImage.deliver':
-      handleImageSaved(msg.payload);
-      break;
-    case 'hemy.model.cleanup.deliver':
-      handleCleanup(msg.payload);
-      break;
-    case 'hemy.error':
-      toast(msg.payload && msg.payload.message ? msg.payload.message : 'Erro desconhecido.', 'error');
-      hideLoading();
-      break;
-    case 'hemy.panorama.captured':
-      handlePanorama(msg.payload);
-      break;
-    case 'hemy.update.info':
-      handleUpdateInfo(msg.payload);
-      break;
-    case 'hemy.lightstrip.result':
-      if (msg.payload && msg.payload.ok === false) toast(msg.payload.error || 'Faixa de luz: erro.', 'error');
-      else toast('Faixa de luz criada!', 'success');
-      break;
-    case 'hemy.mirror.captured':
-      if (msg.payload && msg.payload.ok === false) toast(msg.payload.error || 'Reflexo: erro.', 'error');
-      else toast('Reflexo aplicado!', 'success');
-      break;
-    case 'hemy.auth.restore':
-      // sem uso — acesso vitalício
-      break;
-    default:
-      break;
+function renderToolForm() {
+  const container = document.getElementById('tool-form');
+  const tool = STATE.tool;
+
+  // Show/hide upload section based on tool
+  const uploadSec = document.getElementById('upload-section');
+  uploadSec.style.display = (tool === 'pp') ? 'none' : '';
+
+  const forms = {
+    render: formRender,
+    edit: formEdit,
+    humanize: formHumanize,
+    improve: formImprove,
+    multiply: formMultiply,
+    detail: formDetail,
+    video: formVideo,
+    upscale: formUpscale,
+    pp: formPP,
+  };
+  container.innerHTML = (forms[tool] || formRender)();
+}
+
+function formRender() { return `
+<div class="form-section">
+  <div class="form-section-title">Projeto</div>
+  <div class="form-row">
+    <label class="form-label">Quero gerar <span class="tag">obrigatório</span></label>
+    <div class="select-wrap"><select id="f-gerar">
+      <option value="">Selecione</option>
+      <option>Imagem</option><option>Planta humanizada</option><option>Imagem 360°</option>
+    </select></div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Tipo de cena <span class="tag">obrigatório</span></label>
+    <div class="select-wrap"><select id="f-tipo-cena">
+      <option value="">Selecione</option>
+      <option>Interna</option><option>Externa</option>
+    </select></div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Tipo de ambiente</label>
+    <div class="select-wrap"><select id="f-ambiente">
+      <option value="">Escolha a cena primeiro</option>
+    </select></div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-title">Iluminação natural</div>
+  <div class="form-row">
+    <label class="form-label">Tipo de luz</label>
+    <div class="select-wrap"><select id="f-luz">
+      <option>Ensolarada</option><option>Diurna bem clara</option>
+      <option>Diurna difusa</option><option>Overcast</option>
+      <option selected>Golden hour</option><option>Blue hour</option>
+      <option>Noturna</option><option>Não há, apenas luz artificial</option>
+    </select></div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Sol</label>
+    <div class="chips">
+      <div class="chip active" onclick="toggleChip(this)">Com sol</div>
+      <div class="chip" onclick="toggleChip(this)">Sem sol</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Sombras</label>
+    <div class="chips">
+      <div class="chip active" onclick="toggleChip(this)">Suaves</div>
+      <div class="chip" onclick="toggleChip(this)">Marcadas</div>
+    </div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-title">Materiais <span class="form-optional">opcional</span></div>
+  <div class="form-row">
+    <label class="form-label">Piso</label>
+    <div class="grid2">
+      <div class="select-wrap"><select><option value="">Material</option>
+        <option>Porcelanato</option><option>Madeira</option><option>Cimento queimado</option><option>Mármore</option><option>Outro</option>
+      </select></div>
+      <div class="select-wrap"><select><option value="">Acabamento</option>
+        <option>Acetinado</option><option>Fosco</option><option>Polido</option>
+      </select></div>
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Teto</label>
+    <div class="grid2">
+      <div class="select-wrap"><select><option value="">Material</option>
+        <option>Laje</option><option>Forro PVC</option><option>Forro gesso</option><option>Madeira</option>
+      </select></div>
+      <div class="select-wrap"><select><option value="">Acabamento</option>
+        <option>Pintado</option><option>Natural</option>
+      </select></div>
+    </div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-title">Clima <span class="form-optional">opcional</span></div>
+  <div class="chips">
+    <div class="chip" onclick="toggleChipSingle(this)">Clean</div>
+    <div class="chip" onclick="toggleChipSingle(this)">Sofisticado</div>
+    <div class="chip" onclick="toggleChipSingle(this)">Aconchegante</div>
+    <div class="chip" onclick="toggleChipSingle(this)">Lúdico</div>
+    <div class="chip" onclick="toggleChipSingle(this)">Moderno</div>
+    <div class="chip" onclick="toggleChipSingle(this)">Alto padrão</div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-title">Observações <span class="form-optional">opcional</span></div>
+  <textarea placeholder="Descreva elementos específicos, ajustes de composição, referências…" rows="3" id="f-obs" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--txt);font-family:var(--font);font-size:13px;resize:vertical;outline:none"></textarea>
+</div>
+`; }
+
+function formEdit() { return `
+<div class="form-section">
+  <div class="form-section-title">Edição</div>
+  <div class="form-row">
+    <label class="form-label">Foto de referência <span class="form-optional">opcional</span></label>
+    <div class="upload-zone" style="padding:16px;margin:0" onclick="triggerRefUpload()">
+      <div style="font-size:12px;color:var(--txt3)">Adicione uma foto de referência do elemento/material</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Modelo de geração</label>
+    <div class="chips">
+      <div class="chip active" onclick="toggleChipSingle(this)">Nano 2 — padrão</div>
+      <div class="chip" onclick="toggleChipSingle(this)">Nano Pro — mais detalhe</div>
+    </div>
+  </div>
+</div>
+<div class="form-section">
+  <div class="form-section-title">Observações</div>
+  <textarea placeholder="Descreva o que quer alterar: 'Troque o piso por mármore branco, retire o sofá e adicione mesa de centro…'" rows="4" id="f-obs" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--txt);font-family:var(--font);font-size:13px;resize:vertical;outline:none"></textarea>
+</div>
+`; }
+
+function formHumanize() { return `
+<div class="form-section">
+  <div class="form-section-title">Pessoa</div>
+  <div class="form-row">
+    <label class="form-label">Gênero</label>
+    <div class="select-wrap"><select>
+      <option value="">Selecione</option>
+      <option>Mulher</option><option>Homem</option><option>Mulher e homem</option>
+      <option>Menina</option><option>Menino</option>
+    </select></div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Idade</label>
+    <div class="select-wrap"><select>
+      <option value="">Selecione</option>
+      <option>Adulto</option><option>Jovem</option><option>Idoso</option><option>Criança</option>
+    </select></div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Características</label>
+    <textarea placeholder="Descreva aparência, roupas, postura…" rows="2" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--txt);font-family:var(--font);font-size:13px;resize:vertical;outline:none"></textarea>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Ação desejada</label>
+    <textarea placeholder="O que a pessoa está fazendo?" rows="2" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--txt);font-family:var(--font);font-size:13px;resize:vertical;outline:none"></textarea>
+  </div>
+</div>
+`; }
+
+function formImprove() { return `
+<div class="form-section">
+  <div class="form-section-title">Melhorar render</div>
+  <p style="font-size:12px;color:var(--txt3);line-height:1.6">Transforma um render com cara de CGI em fotografia realista. Mantém a composição e os materiais, só melhora a fotorrealidade.</p>
+  <div class="form-row" style="margin-top:14px">
+    <label class="form-label">Observações <span class="form-optional">opcional</span></label>
+    <textarea placeholder="Ajustes específicos de luz, atmosfera…" rows="3" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--txt);font-family:var(--font);font-size:13px;resize:vertical;outline:none"></textarea>
+  </div>
+</div>
+`; }
+
+function formMultiply() { return `
+<div class="form-section">
+  <div class="form-section-title">Tipo de variação</div>
+  <div class="form-row">
+    <div class="chips" style="flex-direction:column;gap:8px">
+      <div class="chip active" style="border-radius:8px;padding:10px 14px" onclick="toggleChipSingle(this)">
+        <div style="font-weight:700;font-size:13px">Novo mood</div>
+        <div style="font-size:11px;color:var(--txt3)">Mesma cena com outra atmosfera de luz</div>
+      </div>
+      <div class="chip" style="border-radius:8px;padding:10px 14px" onclick="toggleChipSingle(this)">
+        <div style="font-weight:700;font-size:13px">Novo ângulo</div>
+        <div style="font-size:11px;color:var(--txt3)">Mesmo ambiente visto de outro ponto de vista</div>
+      </div>
+    </div>
+  </div>
+</div>
+`; }
+
+function formDetail() { return `
+<div class="form-section">
+  <div class="form-section-title">Gerar detalhes</div>
+  <div class="form-row">
+    <label class="form-label">Quantos ângulos? <span class="tag">obrigatório</span></label>
+    <div class="chips">
+      <div class="chip active" onclick="toggleChipSingle(this)">1</div>
+      <div class="chip" onclick="toggleChipSingle(this)">2</div>
+      <div class="chip" onclick="toggleChipSingle(this)">3</div>
+      <div class="chip" onclick="toggleChipSingle(this)">4</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Áreas de foco</label>
+    <textarea placeholder="Descreva quais áreas quer em close-up: 'bancada da cozinha, parede de pedra, luminária…'" rows="3" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--txt);font-family:var(--font);font-size:13px;resize:vertical;outline:none"></textarea>
+  </div>
+</div>
+`; }
+
+function formVideo() { return `
+<div class="form-section">
+  <div class="form-section-title">Vídeo — Runway</div>
+  <div class="form-row">
+    <label class="form-label">Qualidade</label>
+    <div class="chips">
+      <div class="chip active" onclick="toggleChipSingle(this)">720p</div>
+      <div class="chip" onclick="toggleChipSingle(this)">1080p</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Duração</label>
+    <div class="chips">
+      <div class="chip active" onclick="toggleChipSingle(this)">5 segundos</div>
+      <div class="chip" onclick="toggleChipSingle(this)">10 segundos</div>
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Movimento de câmera <span class="tag">obrigatório</span></label>
+    <div class="chips" style="flex-wrap:wrap">
+      ${['Dolly in','Dolly out','Olhar pra cima','Pan left','Pan right','Zoom in','Zoom out','Orbit','Static'].map(m=>`<div class="chip" onclick="toggleChip(this)">${m}</div>`).join('')}
+    </div>
+  </div>
+  <div class="form-row">
+    <label class="form-label">Movimentos ambientais <span class="form-optional">opcional</span></label>
+    <div class="chips" style="flex-wrap:wrap">
+      ${['Câmera na mão','Cortina ao vento','Vegetação','Fogo aceso','TV ligada'].map(m=>`<div class="chip" onclick="toggleChip(this)">${m}</div>`).join('')}
+    </div>
+  </div>
+</div>
+`; }
+
+function formUpscale() { return `
+<div class="form-section">
+  <div class="form-section-title">Upscale</div>
+  <div class="form-row">
+    <div class="grid2">
+      <div class="tool-card active" onclick="this.parentNode.querySelectorAll('.tool-card').forEach(c=>c.classList.remove('active'));this.classList.add('active');STATE._upscale='2x'">
+        <div class="tool-card-name">2x — Padrão</div>
+        <div class="tool-card-desc">Duplica a resolução original</div>
+      </div>
+      <div class="tool-card" onclick="this.parentNode.querySelectorAll('.tool-card').forEach(c=>c.classList.remove('active'));this.classList.add('active');STATE._upscale='4x'">
+        <div class="tool-card-name">4x — Alta</div>
+        <div class="tool-card-desc">Quadriplica a resolução original</div>
+      </div>
+    </div>
+  </div>
+</div>
+`; }
+
+function formPP() {
+  const sl = (label, id, min=-100, max=100) => `
+  <div class="pp-slider-row">
+    <span class="pp-label">${label}</span>
+    <input type="range" class="pp-input" min="${min}" max="${max}" value="0" id="${id}" oninput="updatePP('${id}',this.value)">
+    <span class="pp-val" id="${id}-val">0</span>
+  </div>`;
+  return `
+<div class="form-section">
+  <div class="pp-group-title">Controles gerais</div>
+  ${sl('Exposição','pp-exp')}${sl('Contraste','pp-con')}${sl('Destaques','pp-hi')}${sl('Sombras','pp-sh')}${sl('Brancos','pp-wh')}${sl('Pretos','pp-bk')}${sl('Claridade','pp-cl')}
+  <div class="pp-group-title">Controles de cor</div>
+  ${sl('Saturação','pp-sat')}${sl('Vibração','pp-vib')}${sl('Temperatura','pp-tmp')}${sl('Tonalidade','pp-ton')}
+  <div class="pp-group-title">Efeitos</div>
+  ${sl('Nitidez','pp-nit',0,100)}${sl('Desfoque','pp-dsf',0,100)}${sl('Vinheta','pp-vin')}
+</div>
+`; }
+
+function updatePP(id, val) {
+  document.getElementById(id + '-val').textContent = val;
+  applyPPFilters();
+}
+function applyPPFilters() {
+  const img = document.getElementById('result-img');
+  if (!img) return;
+  const b = parseInt(document.getElementById('pp-exp')?.value||0) * 0.5;
+  const c = 1 + parseInt(document.getElementById('pp-con')?.value||0) * 0.01;
+  const s = 1 + parseInt(document.getElementById('pp-sat')?.value||0) * 0.01;
+  img.style.filter = `brightness(${1+b/100}) contrast(${c}) saturate(${s})`;
+}
+
+// ── CHIPS ──────────────────────────────────────
+function toggleChip(el) { el.classList.toggle('active'); }
+function toggleChipSingle(el) {
+  el.closest('.chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── UPLOAD ─────────────────────────────────────
+function triggerUpload() { document.getElementById('file-input').click(); }
+function triggerRefUpload() { /* stub */ toast('Upload de referência em breve', 'info'); }
+
+function onFileSelect(e) {
+  const f = e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => setCurrentImage(ev.target.result);
+  r.readAsDataURL(f);
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.add('drag');
+}
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').classList.remove('drag');
+  const f = e.dataTransfer.files[0];
+  if (f && f.type.startsWith('image/')) {
+    const r = new FileReader();
+    r.onload = ev => setCurrentImage(ev.target.result);
+    r.readAsDataURL(f);
   }
-});
-
-// ─── BOOT ─────────────────────────────────────────────────────
-function boot() {
-  // Avisa o plugin que o app está pronto
-  toPlugin('hemy.ready');
-  // Pede contexto do .skp
-  toPlugin('hemy.context.refresh');
-  // Carrega preferências locais
-  updateGoogleKeyStatus();
-  // Checar update (não bloqueante)
-  toPlugin('hemy.update.check');
-  // Renderiza página inicial
-  navigateTo('render');
 }
 
-// ─── NAVEGAÇÃO ────────────────────────────────────────────────
-document.querySelectorAll('.nav-item[data-page]').forEach(el => {
-  el.addEventListener('click', () => navigateTo(el.dataset.page));
-});
-document.querySelectorAll('.nav-item[data-action]').forEach(el => {
-  el.addEventListener('click', () => {
-    if (el.dataset.action === 'cleanup') requestCleanup();
-  });
-});
-
-function navigateTo(page) {
-  state.currentPage = page;
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === page);
-  });
-  document.querySelectorAll('.page').forEach(el => {
-    el.classList.toggle('active', el.id === 'page-' + page);
-  });
-  const titles = { render: 'Render', cenas: 'Cenas', galeria: 'Galeria', '360': 'Tour 360°', config: 'Configurações' };
-  document.getElementById('topbar-title').textContent = titles[page] || page;
-
-  if (page === 'cenas') loadPages();
-  if (page === 'galeria') { toPlugin('hemy.project.list'); }
-  if (page === 'config') updateGoogleKeyStatus();
+function setCurrentImage(dataUrl) {
+  STATE.currentImage = dataUrl;
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('img-preview-section').style.display = '';
+  document.getElementById('img-preview-el').src = dataUrl;
+  // Update stepper
+  document.getElementById('step1').classList.add('done');
+  document.getElementById('step2').classList.add('active');
 }
 
-// ─── CONTEXTO SKP ─────────────────────────────────────────────
-function handleSkpContext(payload) {
-  state.skpFilename = payload && payload.filename ? payload.filename : '';
-  const el = document.getElementById('topbar-skp');
-  el.textContent = state.skpFilename || 'Nenhum arquivo aberto';
-  el.title = state.skpFilename || '';
+function clearImage() {
+  STATE.currentImage = null;
+  document.getElementById('upload-section').style.display = '';
+  document.getElementById('img-preview-section').style.display = 'none';
+  document.getElementById('img-preview-el').src = '';
+  document.getElementById('file-input').value = '';
 }
 
-// ─── CAPTURA DE VIEWPORT ──────────────────────────────────────
+// ── QUALITY ────────────────────────────────────
+function setQuality(btn, q) {
+  document.querySelectorAll('.quality-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  STATE.quality = q;
+}
+
+// ── FORMAT (cenas) ─────────────────────────────
+function setFmt(btn, fmt) {
+  document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  STATE.captureFormat = fmt;
+}
+
+// ── VIEWPORT CAPTURE ────────────────────────────
 function captureViewport() {
-  const fmt = state.captureFormat;
-  showLoading('Capturando viewport...');
-  toPlugin('hemy.viewport.capture', {
-    format: fmt,
-    include_meta: true,
-    apply_ai_style: state.aiStyleOn,
-    matid_enabled: false,
-  });
+  try {
+    sketchup.capturar_viewport(JSON.stringify({
+      format: STATE.captureFormat,
+      include_meta: true,
+      apply_ai_style: document.getElementById('toggle-ai-style')?.classList.contains('on'),
+    }));
+    toast('Capturando viewport…', 'info');
+  } catch(e) {
+    toast('Plugin não conectado. Use dentro do SketchUp.', 'error');
+  }
 }
 
-function handleViewportCaptured(payload) {
-  hideLoading();
-  if (!payload || !payload.ok) {
-    toast(payload && payload.error ? payload.error : 'Falha na captura.', 'error');
-    return;
-  }
-  state.captureDataUrl = payload.dataUrl;
-  const thumb = document.getElementById('capture-thumb');
-  const empty = document.getElementById('capture-empty');
-  thumb.src = payload.dataUrl;
-  thumb.style.display = 'block';
-  empty.style.display = 'none';
+// Called by Ruby: deliverViewportCapture(jsonStr)
+window.deliverViewportCapture = function(json) {
+  const data = typeof json === 'string' ? JSON.parse(json) : json;
+  if (!data.ok) { toast('Falha na captura: ' + (data.error||'erro'), 'error'); return; }
+  setCurrentImage(data.dataUrl);
+  // Save as capture
+  const cap = { id: Date.now(), dataUrl: data.dataUrl, format: data.format||STATE.captureFormat, ts: Date.now() };
+  STATE.captures.unshift(cap);
+  renderCenas();
+  // Switch to criar
+  goPage('criar');
   toast('Viewport capturada!', 'success');
+};
+
+// ── CENAS ──────────────────────────────────────
+function renderCenas() {
+  const grid = document.getElementById('cenas-grid');
+  if (STATE.captures.length === 0) {
+    grid.innerHTML = `<div class="cenas-empty" style="grid-column:1/-1">
+      <div style="font-size:32px;margin-bottom:10px;opacity:0.3">📷</div>
+      <div style="font-size:13px;color:var(--txt3)">Nenhuma cena capturada ainda.</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = STATE.captures.map(c => `
+    <div class="cena-card" onclick="useCena(${c.id})">
+      <img class="cena-thumb" src="${c.dataUrl}" alt="Cena">
+      <div class="cena-body">
+        <div class="cena-name">Captura ${new Date(c.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="cena-fmt">${c.format||'16:9'}</div>
+        <div class="cena-actions">
+          <button class="btn btn-white btn-sm" onclick="event.stopPropagation();useCena(${c.id})">Usar pra gerar</button>
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();deleteCena(${c.id})">✕</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
 }
 
-function requestCameraCheck() {
-  toPlugin('hemy.viewport.cameraSig');
-  captureViewport();
+function useCena(id) {
+  const cap = STATE.captures.find(c => c.id === id);
+  if (!cap) return;
+  setCurrentImage(cap.dataUrl);
+  goPage('criar');
+}
+function deleteCena(id) {
+  STATE.captures = STATE.captures.filter(c => c.id !== id);
+  renderCenas();
+}
+function useSavedCapture() {
+  if (STATE.captures.length === 0) { toast('Nenhuma cena salva ainda', 'info'); return; }
+  goPage('cenas');
 }
 
-// ─── PROPORÇÃO / FORMAT PILLS ─────────────────────────────────
-document.getElementById('format-pills').addEventListener('click', (e) => {
-  const pill = e.target.closest('.format-pill');
-  if (!pill) return;
-  document.querySelectorAll('.format-pill').forEach(p => p.classList.remove('selected'));
-  pill.classList.add('selected');
-  state.captureFormat = pill.dataset.fmt;
-  updateOverlay();
-});
+// ── GENERATION ─────────────────────────────────
+async function generate() {
+  if (STATE.generating) return;
 
-// ─── SAFE FRAME / ESTILO IA ───────────────────────────────────
-function toggleSafeFrame() {
-  state.safeFrameOn = !state.safeFrameOn;
-  document.getElementById('toggle-safeframe').classList.toggle('on', state.safeFrameOn);
-  updateOverlay();
-}
+  // Video uses Runway
+  if (STATE.tool === 'video') { generateVideo(); return; }
 
-function toggleAiStyle() {
-  state.aiStyleOn = !state.aiStyleOn;
-  document.getElementById('toggle-ai-style').classList.toggle('on', state.aiStyleOn);
-  toPlugin('hemy.style.aiPreview', { active: state.aiStyleOn });
-}
+  // PP is local (no API)
+  if (STATE.tool === 'pp') { toast('Ajustes de pós-produção aplicados', 'success'); return; }
 
-function updateOverlay() {
-  toPlugin('hemy.overlay.set', {
-    format: state.captureFormat,
-    safeframe: state.safeFrameOn,
-    grid: false,
-  });
-}
-
-// ─── RENDER ───────────────────────────────────────────────────
-function startRender() {
-  if (!state.captureDataUrl) { toast('Capture a viewport primeiro.', 'error'); return; }
-  if (state.isRendering) return;
-
-  const googleKey = document.getElementById('input-google-key').value.trim()
-                 || state.googleKey;
-  if (!googleKey || !googleKey.startsWith('AIza')) {
-    openModal('Chave não configurada',
-      'Vá em <b>Configurações</b> e insira sua chave da Google AI Studio para gerar renders.',
-      [{ label: 'Configurações', action: () => navigateTo('config'), primary: true },
-       { label: 'Cancelar', action: closeModal }]);
+  if (!STATE.googleKey) {
+    toast('Configure sua chave do Google AI Studio primeiro', 'error');
+    openModal('modal-conta');
     return;
   }
 
-  state.isRendering = true;
-  const btn = document.getElementById('btn-render');
-  btn.textContent = 'Gerando...';
-  btn.disabled = true;
-  showProgress('Enviando para o Gemini...');
+  if (!STATE.currentImage && STATE.tool !== 'edit') {
+    toast('Adicione uma imagem primeiro', 'error');
+    return;
+  }
 
-  const params = {
-    qualidade: document.getElementById('sel-qualidade').value,
-    ambiente:  document.getElementById('sel-ambiente').value,
-    estilo:    document.getElementById('sel-estilo').value,
-    prompt:    document.getElementById('prompt-extra').value.trim(),
-    formato:   state.captureFormat,
-    google_key: googleKey,
-    viewport_dataurl: state.captureDataUrl,
+  STATE.generating = true;
+  document.getElementById('gen-btn').disabled = true;
+
+  // Show loading
+  showLoading('Gerando imagens…', 'Isso pode levar até 60 segundos');
+
+  try {
+    // Try to use SketchUp plugin for re-capture (4K)
+    let imageBase64 = STATE.currentImage;
+    let capturePromise = null;
+
+    if (STATE.currentImage && STATE.currentImage.startsWith('data:image/')) {
+      imageBase64 = STATE.currentImage.replace(/^data:[^;]+;base64,/, '');
+    }
+
+    const prompt = buildPrompt();
+    const result = await callGemini(imageBase64, prompt);
+
+    if (result.ok) {
+      showResult('data:image/png;base64,' + result.imageBase64);
+      saveToHistory(STATE.currentImage, 'data:image/png;base64,' + result.imageBase64, prompt);
+      toast('Imagem gerada com sucesso!', 'success');
+    } else {
+      showError(result.error || 'Falha na geração');
+    }
+  } catch(e) {
+    showError('Erro: ' + e.message);
+  } finally {
+    STATE.generating = false;
+    document.getElementById('gen-btn').disabled = false;
+  }
+}
+
+function buildPrompt() {
+  const userPrompt = document.getElementById('gen-prompt').value.trim();
+  const luz = document.querySelector('#tool-form select')?.value || '';
+  const obs = document.getElementById('f-obs')?.value || '';
+
+  const parts = [];
+  parts.push('Generate a photorealistic architectural rendering based on the provided 3D model screenshot.');
+  parts.push('Style: photorealistic, professional architectural photography, 8K quality.');
+  if (luz) parts.push(`Lighting: ${luz}.`);
+  if (userPrompt) parts.push(userPrompt);
+  if (obs) parts.push(obs);
+  return parts.join(' ');
+}
+
+// ── GEMINI API ─────────────────────────────────
+async function callGemini(imageBase64, prompt) {
+  const QUALITY_MAP = { '1K': { w: 1024, h: 1024 }, '2K': { w: 2048, h: 2048 }, '4K': { w: 4096, h: 4096 } };
+  const q = QUALITY_MAP[STATE.quality] || QUALITY_MAP['2K'];
+
+  const body = {
+    contents: [{
+      parts: [
+        {
+          inline_data: {
+            mime_type: 'image/png',
+            data: imageBase64
+          }
+        },
+        { text: prompt }
+      ]
+    }],
+    generationConfig: {
+      responseModalities: ['IMAGE', 'TEXT'],
+    }
   };
 
-  // Envia para o plugin processar via Gemini
-  toPlugin('hemy.pages.use', params);
+  const resp = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key=${STATE.googleKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }
+  );
 
-  // Fallback: simula progresso enquanto espera
-  simulateProgress();
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    return { ok: false, error: (err.error?.message || `HTTP ${resp.status}`) };
+  }
+
+  const data = await resp.json();
+  // Extract image from response
+  for (const cand of (data.candidates || [])) {
+    for (const part of (cand.content?.parts || [])) {
+      if (part.inlineData?.data) {
+        return { ok: true, imageBase64: part.inlineData.data };
+      }
+    }
+  }
+  return { ok: false, error: 'Gemini não retornou imagem. Verifique sua chave e tente novamente.' };
 }
 
-function simulateProgress() {
-  const steps = [
-    [800,  'Analisando cena...', 15],
-    [2000, 'Gerando render...', 40],
-    [5000, 'Processando detalhes...', 70],
-    [9000, 'Finalizando...', 90],
-  ];
-  steps.forEach(([delay, label, pct]) => {
-    setTimeout(() => {
-      if (state.isRendering) setProgress(pct, label);
-    }, delay);
-  });
-}
-
-function handlePageRender(payload) {
-  state.isRendering = false;
-  hideProgress();
-  const btn = document.getElementById('btn-render');
-  btn.textContent = 'Gerar render';
-  btn.disabled = false;
-
-  if (!payload || !payload.ok) {
-    toast(payload && payload.error ? payload.error : 'Erro ao gerar render.', 'error');
+// ── RUNWAY VIDEO API ───────────────────────────
+async function generateVideo() {
+  if (!STATE.runwayKey) {
+    toast('Configure sua chave do Runway primeiro', 'error');
+    openModal('modal-conta');
+    return;
+  }
+  if (!STATE.currentImage) {
+    toast('Adicione uma imagem primeiro', 'error');
     return;
   }
 
-  state.renderDataUrl = payload.dataUrl || payload.render_dataurl;
-  if (!state.renderDataUrl) { toast('Render retornou vazio.', 'error'); return; }
+  STATE.generating = true;
+  document.getElementById('gen-btn').disabled = true;
+  showLoading('Gerando vídeo…', 'Isso pode levar alguns minutos');
 
-  const preview = document.getElementById('render-preview');
-  const placeholder = document.getElementById('render-placeholder');
-  preview.src = state.renderDataUrl;
-  preview.style.display = 'block';
-  placeholder.style.display = 'none';
+  try {
+    // Get selected movement
+    const movements = [...document.querySelectorAll('#tool-form .chip.active')].map(c => c.textContent.trim());
+    const prompt = movements.join(', ') || 'cinematic camera movement, smooth';
 
-  document.getElementById('btn-save').style.display = 'block';
-  document.getElementById('btn-upscale').style.display = 'block';
-  toast('Render gerado!', 'success');
+    // Runway Gen-3 Alpha API
+    const resp = await fetch('https://api.dev.runwayml.com/v1/image_to_video', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${STATE.runwayKey}`,
+        'X-Runway-Version': '2024-11-06',
+      },
+      body: JSON.stringify({
+        promptImage: STATE.currentImage,
+        promptText: prompt,
+        model: 'gen3a_turbo',
+        duration: 5,
+        ratio: '1280:720',
+        seed: Math.floor(Math.random() * 999999),
+      })
+    });
 
-  // Auto-salva na galeria
-  saveToGallery(state.renderDataUrl);
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${resp.status}`);
+    }
+
+    const data = await resp.json();
+    const taskId = data.id;
+
+    // Poll for completion
+    const videoUrl = await pollRunwayTask(taskId);
+    showVideoResult(videoUrl);
+    toast('Vídeo gerado!', 'success');
+  } catch(e) {
+    showError('Erro no vídeo: ' + e.message);
+  } finally {
+    STATE.generating = false;
+    document.getElementById('gen-btn').disabled = false;
+  }
 }
 
-// ─── SALVAR RENDER ────────────────────────────────────────────
-function saveRender() {
-  if (!state.renderDataUrl) return;
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `lavi_render_${ts}.png`;
-  const b64 = state.renderDataUrl.replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.file.save', { filename, base64: b64, mime: 'image/png' });
-  toast('Salvando render...', 'success');
+async function pollRunwayTask(taskId, maxAttempts = 60) {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 5000));
+    const resp = await fetch(`https://api.dev.runwayml.com/v1/tasks/${taskId}`, {
+      headers: {
+        'Authorization': `Bearer ${STATE.runwayKey}`,
+        'X-Runway-Version': '2024-11-06',
+      }
+    });
+    const data = await resp.json();
+    if (data.status === 'SUCCEEDED') return data.output?.[0];
+    if (data.status === 'FAILED') throw new Error(data.failure || 'Task falhou');
+    // Update loading text
+    const pct = data.progressRatio ? Math.round(data.progressRatio * 100) : ((i * 2) + '%');
+    document.querySelector('.loading-sub').textContent = `Progresso: ${pct}%`;
+  }
+  throw new Error('Timeout aguardando vídeo');
 }
 
-function saveToGallery(dataUrl) {
-  const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `render_${ts}.png`;
-  const b64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.project.saveImage', {
-    filename,
-    base64: b64,
-    mime: 'image/png',
-    tipo: 'render',
-  });
+// ── RESULT DISPLAY ─────────────────────────────
+function showLoading(title, sub) {
+  document.getElementById('result-hero').innerHTML = `
+    <div class="loading-wrap fade-in">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">${title}</div>
+      <div class="loading-sub">${sub}</div>
+    </div>
+  `;
+  document.getElementById('result-actions').style.display = 'none';
 }
 
-function upscaleRender() {
-  if (!state.renderDataUrl) return;
-  toast('Upscale em desenvolvimento — em breve!');
+function showResult(dataUrl) {
+  STATE.currentResult = dataUrl;
+  document.getElementById('result-hero').innerHTML = `
+    <div class="result-img-wrap fade-in">
+      <img id="result-img" class="result-img" src="${dataUrl}" alt="Resultado">
+    </div>
+  `;
+  document.getElementById('result-actions').style.display = 'flex';
+  document.getElementById('step3').classList.add('done');
+  document.getElementById('step4').classList.add('active');
 }
 
-function handleImageSaved(payload) {
-  if (payload && payload.ok) {
-    toast('Imagem salva na pasta do projeto!', 'success');
+function showVideoResult(url) {
+  STATE.currentResult = url;
+  document.getElementById('result-hero').innerHTML = `
+    <div class="result-img-wrap fade-in" style="width:100%;max-width:700px">
+      <video controls autoplay loop style="width:100%;border-radius:12px;background:#000">
+        <source src="${url}" type="video/mp4">
+        Seu navegador não suporta vídeo HTML5.
+      </video>
+    </div>
+  `;
+  document.getElementById('result-actions').style.display = 'flex';
+}
+
+function showError(msg) {
+  document.getElementById('result-hero').innerHTML = `
+    <div class="result-hero-empty fade-in">
+      <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+      <div style="font-size:14px;color:var(--red)">${msg}</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:16px" onclick="generate()">Tentar novamente</button>
+    </div>
+  `;
+  document.getElementById('result-actions').style.display = 'none';
+  toast(msg, 'error');
+}
+
+// ── RESULT ACTIONS ─────────────────────────────
+function saveToProject() {
+  if (!STATE.currentResult) return;
+  toast('Imagem salva no dashboard', 'success');
+  saveToHistory(STATE.currentImage, STATE.currentResult, document.getElementById('gen-prompt').value);
+  renderDashboard();
+}
+
+function downloadResult() {
+  if (!STATE.currentResult) return;
+  const a = document.createElement('a');
+  if (STATE.currentResult.startsWith('data:')) {
+    a.href = STATE.currentResult;
+    a.download = `lavi_render_${Date.now()}.png`;
   } else {
-    toast(payload && payload.error ? payload.error : 'Erro ao salvar imagem.', 'error');
+    a.href = STATE.currentResult;
+    a.download = `lavi_video_${Date.now()}.mp4`;
+    a.target = '_blank';
   }
+  a.click();
 }
 
-// ─── GALERIA ──────────────────────────────────────────────────
-function handleGalleryList(payload) {
-  if (!payload || !payload.ok) return;
-  state.galleryItems = payload.items || [];
-  renderGallery();
+function editResult() {
+  if (!STATE.currentResult || !STATE.currentResult.startsWith('data:')) return;
+  setCurrentImage(STATE.currentResult);
+  selectTool(document.querySelector('[data-tool="edit"]'), 'edit');
+  renderToolForm();
+  toast('Imagem carregada para edição', 'info');
 }
 
-function renderGallery() {
-  const grid = document.getElementById('gallery-grid');
-  const empty = document.getElementById('galeria-empty');
-  const items = state.galleryItems;
-  if (!items.length) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
+function multiplyResult() {
+  if (!STATE.currentResult) return;
+  setCurrentImage(STATE.currentResult);
+  selectTool(document.querySelector('[data-tool="multiply"]'), 'multiply');
+  renderToolForm();
+}
+
+function upscaleResult() {
+  if (!STATE.currentResult) return;
+  toast('Upscale: configure sua chave e use a ferramenta Upscale', 'info');
+}
+
+function pp() {
+  selectTool(document.querySelector('[data-tool="pp"]'), 'pp');
+  renderToolForm();
+}
+
+// ── HISTORY ────────────────────────────────────
+function saveToHistory(originalDataUrl, resultDataUrl, prompt) {
+  const entry = {
+    id: Date.now(),
+    original: originalDataUrl,
+    result: resultDataUrl,
+    prompt: prompt || '',
+    tool: STATE.tool,
+    quality: STATE.quality,
+    ts: Date.now(),
+  };
+  STATE.history.unshift(entry);
+  // Keep last 100
+  if (STATE.history.length > 100) STATE.history.pop();
+  // Persist
+  try {
+    const toSave = STATE.history.slice(0, 20).map(e => ({ ...e, result: e.result?.substring(0, 200000), original: '' }));
+    localStorage.setItem('lavi_history', JSON.stringify(toSave));
+  } catch(e) {}
+  renderDashboard();
+}
+
+function renderDashboard() {
+  const container = document.getElementById('dash-content');
+  if (STATE.history.length === 0) {
+    container.innerHTML = `
+      <div class="dash-empty">
+        <div class="dash-empty-icon">🖼</div>
+        <div class="dash-empty-title">Nenhuma imagem ainda</div>
+        <div class="dash-empty-text">Clique em <strong>Criar</strong> para gerar sua primeira imagem.</div>
+      </div>
+    `;
     return;
   }
-  empty.style.display = 'none';
-  grid.style.display = 'grid';
-  grid.innerHTML = items.map((item, i) => `
-    <div class="gallery-card">
-      <img class="gallery-img" src="${item.dataUrl || item.thumb || ''}"
-           loading="lazy" onclick="openLightbox('${escJs(item.dataUrl || '')}')">
-      <div class="gallery-info">
-        <span class="gallery-name">${escHtml(item.filename || 'Render')}</span>
-        <span class="gallery-date">${item.date || ''}</span>
-      </div>
-      <div class="gallery-actions">
-        <button class="gal-btn" onclick="downloadGalleryItem(${i})">⬇ Salvar</button>
-        <button class="gal-btn" onclick="deleteGalleryItem(${i})" style="color:#c0392b">✕</button>
+  container.innerHTML = `<div class="dash-grid">` + STATE.history.map(e => `
+    <div class="dash-card" onclick="openHistoryCard(${e.id})">
+      ${e.result && e.result.startsWith('data:image')
+        ? `<img class="dash-card-img" src="${e.result}" alt="Resultado" loading="lazy">`
+        : `<div class="dash-card-img-placeholder">🎬 Vídeo</div>`}
+      <div class="dash-card-body">
+        <div class="dash-card-name">${toolName(e.tool)} · ${e.quality||''}</div>
+        <div class="dash-card-meta">${timeAgo(e.ts)}</div>
+        <div class="dash-card-actions">
+          <button class="dash-card-btn" onclick="event.stopPropagation();downloadCard(${e.id})">⬇ Baixar</button>
+          <button class="dash-card-btn" onclick="event.stopPropagation();useCardAsBase(${e.id})">↑ Usar</button>
+          <button class="dash-card-btn" onclick="event.stopPropagation();deleteCard(${e.id})" style="color:var(--red)">✕</button>
+        </div>
       </div>
     </div>
-  `).join('');
+  `).join('') + `</div>`;
 }
 
-function filterGallery() {
-  // Filtragem local por tipo
-  const f = document.getElementById('gal-filter').value;
-  const items = state.galleryItems.filter(it => f === 'all' || (it.tipo || '') === f);
-  const grid = document.getElementById('gallery-grid');
-  const empty = document.getElementById('galeria-empty');
-  if (!items.length) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-  empty.style.display = 'none';
-  grid.style.display = 'grid';
-  // (re-renderiza com items filtrados)
+function openHistoryCard(id) {
+  const e = STATE.history.find(h => h.id === id);
+  if (!e || !e.result) return;
+  showResult(e.result);
+  goPage('criar');
+}
+function downloadCard(id) {
+  const e = STATE.history.find(h => h.id === id);
+  if (!e) return;
+  const a = document.createElement('a');
+  a.href = e.result;
+  a.download = `lavi_${e.tool}_${e.id}.png`;
+  a.click();
+}
+function useCardAsBase(id) {
+  const e = STATE.history.find(h => h.id === id);
+  if (!e) return;
+  setCurrentImage(e.result);
+  goPage('criar');
+}
+function deleteCard(id) {
+  STATE.history = STATE.history.filter(h => h.id !== id);
+  renderDashboard();
 }
 
-function downloadGalleryItem(i) {
-  const item = state.galleryItems[i];
-  if (!item) return;
-  const b64 = (item.dataUrl || '').replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.file.save', { filename: item.filename || 'render.png', base64: b64, mime: 'image/png' });
+// ── HELPERS ────────────────────────────────────
+function toolName(t) {
+  const names = { render:'Render', edit:'Edição', humanize:'Humanizar', improve:'Melhorar', multiply:'Variacão', detail:'Detalhe', video:'Vídeo', upscale:'Upscale', pp:'Pós-prod' };
+  return names[t] || t;
+}
+function timeAgo(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000) return 'agora mesmo';
+  if (d < 3600000) return Math.floor(d/60000) + 'min atrás';
+  if (d < 86400000) return Math.floor(d/3600000) + 'h atrás';
+  return Math.floor(d/86400000) + 'd atrás';
 }
 
-function deleteGalleryItem(i) {
-  const item = state.galleryItems[i];
-  if (!item) return;
-  toPlugin('hemy.project.deleteImage', { filename: item.filename });
-}
+function toggleSelectAll() {}
+function deleteSelected() {}
 
-function openProjectFolder() {
-  toPlugin('hemy.project.openFolder');
-}
-
-// ─── CENAS (Pages do SketchUp) ────────────────────────────────
-function loadPages() {
-  toPlugin('hemy.pages.list');
-  loadCaptures();
-}
-
-function handlePagesList(pages) {
-  if (!Array.isArray(pages)) return;
-  state.scenes = pages;
-  renderScenes();
-}
-
-function renderScenes() {
-  const grid = document.getElementById('cenas-grid');
-  const empty = document.getElementById('cenas-empty');
-  const scenes = state.scenes;
-  if (!scenes.length) {
-    grid.style.display = 'none';
-    empty.style.display = 'flex';
-    return;
-  }
-  empty.style.display = 'none';
-  grid.style.display = 'grid';
-  grid.innerHTML = scenes.map((s, i) => `
-    <div class="cena-card">
-      <div class="cena-thumb">
-        ${s.thumb ? `<img src="${escJs(s.thumb)}" alt="">` : `<div class="cena-thumb-empty">Sem miniatura</div>`}
-      </div>
-      <div class="cena-info">
-        <div class="cena-name">${escHtml(s.name || 'Cena')}</div>
-        <div class="cena-meta">${s.format || '16:9'} &nbsp;·&nbsp; ${s.width || '—'}px</div>
-      </div>
-      <div class="cena-actions">
-        <button class="cena-action primary" onclick="useScene(${i})">Usar</button>
-        <button class="cena-action" onclick="activateScene(${i})">Ativar</button>
-        <button class="cena-action danger" onclick="deleteScene(${i})">✕</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-function loadCaptures() {
-  toPlugin('hemy.capture.list');
-}
-
-function handleCapturesList(payload) {
-  if (!payload || !payload.ok) return;
-  state.captures = payload.items || [];
-}
-
-function handleCaptureSaved(payload) {
-  if (!payload || !payload.ok) toast(payload && payload.error ? payload.error : 'Erro ao salvar cena.', 'error');
-  else { toast('Cena salva!', 'success'); loadCaptures(); }
-}
-
-function addScene() {
-  const name = prompt('Nome da cena:');
-  if (!name || !name.trim()) return;
-  toPlugin('hemy.scene.addPage', { name: name.trim() });
-  setTimeout(loadPages, 500);
-}
-
-function useScene(i) {
-  const s = state.scenes[i];
-  if (!s) return;
-  showLoading('Capturando cena...');
-  toPlugin('hemy.pages.use', { name: s.name, format: s.format || state.captureFormat });
-}
-
-function activateScene(i) {
-  const s = state.scenes[i];
-  if (!s) return;
-  toPlugin('hemy.pages.activate', { name: s.name });
-  toast(`Cena "${s.name}" ativada no SketchUp.`);
-}
-
-function deleteScene(i) {
-  const s = state.scenes[i];
-  if (!s) return;
-  openModal('Remover cena',
-    `Remover a cena <b>${escHtml(s.name)}</b>? Isso apaga o arquivo de captura mas <b>não</b> remove a Page do SketchUp.`,
-    [
-      { label: 'Cancelar', action: closeModal },
-      { label: 'Remover', action: () => { closeModal(); toPlugin('hemy.pages.delete', { name: s.name }); setTimeout(loadPages, 400); }, primary: true }
-    ]);
-}
-
-function deleteAllScenes() {
-  openModal('Limpar todas as cenas',
-    'Isso remove <b>todas as cenas</b> salvas. Não é possível desfazer.',
-    [
-      { label: 'Cancelar', action: closeModal },
-      { label: 'Limpar tudo', action: () => { closeModal(); toPlugin('hemy.pages.deleteMany', { names: state.scenes.map(s => s.name) }); setTimeout(loadPages, 400); }, primary: true }
-    ]);
-}
-
-function importScenes() {
-  toPlugin('hemy.pages.listNative');
-}
-
-function handleNativePagesList(pages) {
-  // Exibe modal de seleção de Pages nativas
-  if (!Array.isArray(pages) || !pages.length) { toast('Nenhuma Page encontrada no SketchUp.'); return; }
-  // Implementação simples: importa todas
-  toPlugin('hemy.pages.import', { pages: pages.map(p => p.name) });
-  setTimeout(loadPages, 800);
-}
-
-function refreshAllThumbs() {
-  showLoading('Atualizando miniaturas...');
-  toPlugin('hemy.pages.refreshThumbs');
-  setTimeout(() => { hideLoading(); loadPages(); }, 3000);
-}
-
-// ─── PANORAMA 360° ────────────────────────────────────────────
-function togglePanoAi() {
-  state.panoApplyAi = !state.panoApplyAi;
-  document.getElementById('toggle-pano-ai').classList.toggle('on', state.panoApplyAi);
-}
-
-function capturePanorama() {
-  showLoading('Capturando panorama 360°... (pode levar alguns minutos)');
-  toPlugin('hemy.panorama.capture', {
-    resolution: document.getElementById('sel-pano-res').value,
-    apply_ai_style: state.panoApplyAi,
-  });
-}
-
-function handlePanorama(payload) {
-  hideLoading();
-  if (!payload || !payload.ok) {
-    toast(payload && payload.error ? payload.error : 'Erro no panorama.', 'error');
-    return;
-  }
-  state.panoDataUrl = payload.dataUrl;
-  const img = document.getElementById('pano-img');
-  img.src = payload.dataUrl;
-  img.style.display = 'block';
-  document.getElementById('pano-empty').style.display = 'none';
-  document.getElementById('btn-save-pano').style.display = 'block';
-  toast('Panorama 360° capturado!', 'success');
-}
-
-function savePanorama() {
-  if (!state.panoDataUrl) return;
-  const ts = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
-  const b64 = state.panoDataUrl.replace(/^data:image\/\w+;base64,/, '');
-  toPlugin('hemy.file.save', { filename: `lavi_pano_${ts}.png`, base64: b64, mime: 'image/png' });
-}
-
-// ─── LIMPEZA DO MODELO ────────────────────────────────────────
-function requestCleanup() {
-  openModal('Limpeza do modelo',
-    'Remove materiais, componentes, camadas e estilos não utilizados do modelo SketchUp. Continuar?',
-    [
-      { label: 'Cancelar', action: closeModal },
-      { label: 'Limpar', action: () => { closeModal(); showLoading('Limpando...'); toPlugin('hemy.model.cleanup'); }, primary: true }
-    ]);
-}
-
-function handleCleanup(payload) {
-  hideLoading();
-  if (!payload) return;
-  const d = payload.diff || {};
-  const parts = [];
-  if (d.materials)  parts.push(`${d.materials} materiais`);
-  if (d.components) parts.push(`${d.components} componentes`);
-  if (d.layers)     parts.push(`${d.layers} camadas`);
-  if (d.styles)     parts.push(`${d.styles} estilos`);
-  const msg = parts.length ? `Removidos: ${parts.join(', ')}.` : 'Nada para limpar.';
-  toast(msg, 'success');
-}
-
-// ─── CONFIGURAÇÕES ────────────────────────────────────────────
-function saveGoogleKey() {
+// ── API KEY TESTING ────────────────────────────
+async function testGoogleKey() {
   const key = document.getElementById('input-google-key').value.trim();
-  if (!key) { toast('Insira uma chave válida.', 'error'); return; }
-  state.googleKey = key;
-  localStorage.setItem('lavi_google_key', key);
-  // Salva no plugin (para o Ruby usar em chamadas diretas)
-  toPlugin('hemy.auth.persist', JSON.stringify({ google_key: key }));
-  updateGoogleKeyStatus();
-  toast('Chave salva!', 'success');
+  if (!key) { toast('Cole sua chave primeiro', 'error'); return; }
+  toast('Testando chave…', 'info');
+  try {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+    if (resp.ok) {
+      toast('✅ Chave válida!', 'success');
+      document.getElementById('google-key-status').textContent = '✅ Chave válida e conectada';
+      document.getElementById('google-key-status').style.color = 'var(--green)';
+    } else {
+      const err = await resp.json().catch(() => ({}));
+      toast('❌ Chave inválida: ' + (err.error?.message||'erro'), 'error');
+    }
+  } catch(e) { toast('Erro ao testar: ' + e.message, 'error'); }
 }
 
-function updateGoogleKeyStatus() {
-  const key = state.googleKey || localStorage.getItem('lavi_google_key') || '';
-  const status = document.getElementById('google-key-status');
-  if (key && key.startsWith('AIza')) {
-    status.className = 'key-status ok';
-    status.textContent = 'Configurada ✓';
-  } else {
-    status.className = 'key-status empty';
-    status.textContent = 'Não configurada';
-  }
+async function testRunwayKey() {
+  const key = document.getElementById('input-runway-key').value.trim();
+  if (!key) { toast('Cole sua chave primeiro', 'error'); return; }
+  toast('Testando chave Runway…', 'info');
+  try {
+    const resp = await fetch('https://api.dev.runwayml.com/v1/organization', {
+      headers: { 'Authorization': `Bearer ${key}`, 'X-Runway-Version': '2024-11-06' }
+    });
+    if (resp.ok) {
+      toast('✅ Chave Runway válida!', 'success');
+    } else {
+      toast('❌ Chave Runway inválida', 'error');
+    }
+  } catch(e) { toast('Erro ao testar: ' + e.message, 'error'); }
 }
 
-function pickFolder() {
-  toPlugin('hemy.project.pickFolder');
-}
-
-function toggleCompact() {
-  state.compact = !state.compact;
-  document.getElementById('toggle-compact').classList.toggle('on', state.compact);
-  toPlugin('hemy.ui.compact', { compact: state.compact });
-}
-
-// ─── UPDATE ───────────────────────────────────────────────────
-function handleUpdateInfo(payload) {
-  if (!payload || !payload.ok) return;
-  if (payload.has_update) {
-    state.updateAvailable = true;
-    document.getElementById('update-badge').classList.add('visible');
-    document.getElementById('update-badge').title =
-      `Versão ${payload.remote_version} disponível (atual: ${payload.local_version})`;
-  }
-}
-
-function requestUpdate() {
-  if (!state.updateAvailable) return;
-  openModal('Atualização disponível',
-    'Uma nova versão do plugin LAVI Render está disponível. Instalar agora? O SketchUp precisará ser reiniciado.',
-    [
-      { label: 'Agora não', action: closeModal },
-      { label: 'Instalar', action: () => { closeModal(); showLoading('Instalando atualização...'); toPlugin('hemy.update.install'); }, primary: true }
-    ]);
-}
-
-// ─── MODAL ────────────────────────────────────────────────────
-function openModal(title, body, btns) {
-  document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-body').innerHTML = body;
-  const footer = document.getElementById('modal-footer');
-  footer.innerHTML = '';
-  (btns || []).forEach(b => {
-    const el = document.createElement('button');
-    el.className = 'modal-btn' + (b.primary ? ' primary' : '');
-    el.textContent = b.label;
-    el.onclick = b.action;
-    footer.appendChild(el);
-  });
-  document.getElementById('modal-overlay').classList.add('open');
-}
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-}
-document.getElementById('modal-overlay').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeModal();
-});
-
-// ─── LIGHTBOX ─────────────────────────────────────────────────
-function openLightbox(src) {
-  if (!src) return;
-  document.getElementById('lightbox-img').src = src;
-  document.getElementById('lightbox').classList.add('open');
-}
-function closeLightbox() {
-  document.getElementById('lightbox').classList.remove('open');
-}
-document.getElementById('lightbox').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) closeLightbox();
-});
-
-// ─── LOADING ──────────────────────────────────────────────────
-function showLoading(msg) {
-  document.getElementById('loading-msg').textContent = msg || 'Aguarde...';
-  document.getElementById('loading-overlay').classList.add('open');
-}
-function hideLoading() {
-  document.getElementById('loading-overlay').classList.remove('open');
-}
-
-// ─── PROGRESSO ────────────────────────────────────────────────
-function showProgress(label) {
-  const el = document.getElementById('render-progress');
-  el.classList.add('visible');
-  setProgress(5, label);
-}
-function setProgress(pct, label) {
-  document.getElementById('progress-bar').style.width = pct + '%';
-  if (label) document.getElementById('progress-label').textContent = label;
-}
-function hideProgress() {
-  setProgress(100, 'Concluído!');
-  setTimeout(() => {
-    document.getElementById('render-progress').classList.remove('visible');
-    setProgress(0, '');
-  }, 800);
-}
-
-// ─── TOAST ────────────────────────────────────────────────────
-function toast(msg, type) {
-  const c = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' ' + type : '');
+// ── TOAST ──────────────────────────────────────
+let _toastTimer;
+function toast(msg, type='info') {
+  const el = document.getElementById('toast');
   el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }, 3200);
+  el.className = `show ${type}`;
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.classList.remove('show'); }, 3500);
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function escJs(s) {
-  return String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"');
+// ── SKETCHUP BRIDGE ────────────────────────────
+// These functions are called by the SketchUp plugin via execute_script
+// The plugin wrapper (panel.html) passes them through to here.
+window.deliverViewportCapture = window.deliverViewportCapture || function(){};
+window.deliverMirrorRenders = function() {};
+window.deliverError = function(msg) { toast(msg, 'error'); };
+window.deliverSkpContext = function() {};
+window.deliverAuthSession = function() {};
+window.deliverProjectImagesList = function() {};
+window.deliverProjectImageSaved = function(json) {
+  const d = typeof json === 'string' ? JSON.parse(json) : json;
+  if (d.ok) toast('Salvo em: ' + (d.path||''), 'success');
+};
+
+// ── INIT ───────────────────────────────────────
+function init() {
+  loadKeys();
+  // Load history from localStorage
+  try {
+    const h = JSON.parse(localStorage.getItem('lavi_history') || '[]');
+    STATE.history = Array.isArray(h) ? h : [];
+  } catch(e) { STATE.history = []; }
+  renderDashboard();
+  renderCenas();
+  renderToolForm();
+
+  // Check if running inside SketchUp plugin
+  const inPlugin = !!(window.sketchup);
+  if (inPlugin) {
+    // Notify plugin we're ready
+    try { sketchup.dialog_pronto && sketchup.dialog_pronto(); } catch(e) {}
+  }
+
+  // Show API key prompt if not configured
+  if (!STATE.googleKey) {
+    setTimeout(() => {
+      if (!STATE.googleKey) openModal('modal-conta');
+    }, 800);
+  }
 }
 
-// ─── BOOT ─────────────────────────────────────────────────────
-boot();
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
